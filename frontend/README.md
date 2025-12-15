@@ -219,6 +219,9 @@ GET    /api/v2.0.0/recycle-bin                    // 获取回收站
 POST   /api/v2.0.0/recycle-bin/:id/restore        // 恢复项目
 DELETE /api/v2.0.0/recycle-bin/:id                // 永久删除
 DELETE /api/v2.0.0/recycle-bin                    // 清空回收站
+
+// 统计信息
+GET    /api/v2.0.0/stats                          // 获取统计信息
 ```
 
 ### 错误处理
