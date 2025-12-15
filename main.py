@@ -2,10 +2,6 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.todos import router as todos_router
-from database.init_db import init_db
-
-# 初始化数据库
-init_db()
 
 app = FastAPI(
     title="待办事项API",

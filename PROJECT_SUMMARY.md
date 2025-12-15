@@ -53,10 +53,7 @@ Todo-Management/
 │   ├── services/               # 业务逻辑层
 │   │   └── todo_service.py    # 复杂的业务逻辑处理
 │   └── database/               # 数据存储层
-│       ├── database.py        # 数据库连接配置
-│       ├── models.py          # SQLAlchemy数据库模型
-│       ├── db_storage.py      # 数据库存储实现
-│       └── init_db.py         # 数据库初始化
+│       └── storage.py         # 纯数据存储实现
 │
 ├── 📁 前端应用层
 │   ├── frontend/
@@ -81,7 +78,6 @@ Todo-Management/
 └── 📖 项目文档
     ├── README.md              # 项目总览和快速开始
     ├── PROJECT_SUMMARY.md     # 项目完成总结
-    ├── DATABASE_USAGE.md      # 数据库使用说明
     └── frontend/README.md     # 前端开发指南
 ```
 
@@ -121,7 +117,7 @@ Todo-Management/
 
 ### 后端优化
 - **分层架构** - 清晰的职责分离
-- **SQLite数据库** - 可靠的数据持久化存储
+- **内存存储** - 快速的数据访问
 - **错误处理** - 统一的异常管理
 - **API文档** - 自动生成和更新
 
@@ -182,7 +178,7 @@ Todo-Management/
 
 ### 中期扩展
 - [ ] **用户系统** - 登录注册和权限管理
-- [ ] **数据库升级** - PostgreSQL/MySQL数据库集成
+- [ ] **数据持久化** - PostgreSQL数据库集成
 - [ ] **云端同步** - 多设备数据同步
 - [ ] **主题系统** - 深色模式和个性化主题
 

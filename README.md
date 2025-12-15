@@ -37,15 +37,13 @@
 ## 🏗️ 系统架构
 
 ### 技术栈
-**后端 (FastAPI + Python + SQLite)**
+**后端 (FastAPI + Python)**
 - **FastAPI** - 现代、快速的Python Web框架
-- **SQLAlchemy** - ORM数据库映射
-- **SQLite** - 轻量级数据库
 - **Pydantic** - 数据验证和序列化
 - **Uvicorn** - 高性能ASGI服务器
-- **分层架构** - 数据库层、服务层、路由层分离
+- **分层架构** - 存储层、服务层、路由层分离
 
-**前端 (React 18 + TypeScript)**
+**前端 (React + TypeScript)**
 - **React 18** - 现代React框架
 - **TypeScript** - 类型安全的JavaScript
 - **Vite** - 快速构建工具
@@ -58,17 +56,14 @@ Todo-Management/
 ├── 📁 后端服务
 │   ├── main.py                 # FastAPI应用入口
 │   ├── requirements.txt        # Python依赖
-│   ├── models/                 # Pydantic数据模型
+│   ├── models/                 # 数据模型层
 │   │   └── model.py           # 待办事项数据模型
 │   ├── routers/                # API路由层
 │   │   └── todos.py           # 待办事项API路由
 │   ├── services/               # 业务逻辑层
 │   │   └── todo_service.py    # 待办事项业务逻辑
 │   └── database/               # 数据存储层
-│       ├── database.py        # 数据库连接配置
-│       ├── models.py          # SQLAlchemy数据库模型
-│       ├── db_storage.py      # 数据库存储实现
-│       └── init_db.py         # 数据库初始化
+│       └── storage.py         # 纯数据存储实现
 │
 ├── 📁 前端应用
 │   ├── frontend/
@@ -93,7 +88,6 @@ Todo-Management/
 └── 📖 项目文档
     ├── README.md              # 项目总览（本文件）
     ├── PROJECT_SUMMARY.md     # 项目完成总结
-    ├── DATABASE_USAGE.md      # 数据库使用说明
     └── frontend/README.md     # 前端开发指南
 ```
 
@@ -175,11 +169,6 @@ npm run dev
 | `DELETE` | `/recycle-bin/{todo_id}` | 永久删除 |
 | `DELETE` | `/recycle-bin` | 清空回收站 |
 
-#### 统计信息
-| 方法 | 路径 | 描述 |
-|------|------|------|
-| `GET` | `/stats` | 获取统计信息（总数/已完成/待完成/回收站数量）|
-
 ### 请求示例
 
 #### 创建待办事项
@@ -231,19 +220,6 @@ enum Priority {
   LOW = 'low'         // 低优先级
 }
 ```
-
-### 数据库模型
-**后端使用SQLAlchemy ORM，包含以下字段：**
-- `id`: 主键，自增
-- `title`: 标题（最大100字符）
-- `description`: 描述（最大500字符，可选）
-- `completed`: 完成状态（布尔值）
-- `priority`: 优先级（high/medium/low）
-- `start_time`: 开始时间（HH:MM格式）
-- `end_time`: 结束时间（HH:MM格式）
-- `created_at`: 创建时间
-- `updated_at`: 更新时间
-- `deleted`: 软删除标记
 
 ## 🎨 前端特性
 
@@ -312,21 +288,19 @@ isort .
 
 1. **端口冲突**: 确保8000和3000端口未被占用
 2. **跨域处理**: 前端已配置代理，无需额外CORS设置
-3. **数据持久化**: 使用SQLite数据库，数据自动持久化存储
-4. **数据库文件**: `todos.db` 文件会自动创建在项目根目录
-5. **性能优化**: 当前实现适用于中小型项目，大数据量时考虑分页
+3. **数据持久化**: 当前使用内存存储，生产环境建议添加数据库
+4. **性能优化**: 大数据量时考虑分页和虚拟滚动
 
 ## 🚀 后续扩展
 
 ### 功能增强
 - [ ] 用户认证和授权系统
-- [ ] 数据库升级（PostgreSQL/MySQL）
+- [ ] 数据持久化（PostgreSQL/MongoDB）
 - [ ] 待办事项分类和标签
 - [ ] 截止日期和提醒功能
 - [ ] 搜索和高级筛选
 - [ ] 数据导出（CSV/JSON）
 - [ ] 多语言支持
-- [ ] 任务重复和循环功能
 
 ### 技术优化
 - [ ] 状态管理（Redux Toolkit/Zustand）
