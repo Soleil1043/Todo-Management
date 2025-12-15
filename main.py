@@ -1,14 +1,15 @@
 import uvicorn
 from fastapi import FastAPI
-from routers import todo
+from fastapi.middleware.cors import CORSMiddleware
+from routers.todos import router as todos_router
 
 app = FastAPI(
     title="待办事项API",
-    description="FastAPI自用练习项目",
-    version="1.0.0",
+    description="FastAPI的后端文档界面",
+    version="2.0.0",
 )
 
-app.include_router(todo.router, prefix="/api/v1.0.0", tags=["代办事项"])
+app.include_router(todos_router, prefix="/api/v2.0.0", tags=["代办事项"])
 
 @app.get("/", tags=["根目录"])
 async def read_root():
