@@ -143,7 +143,7 @@ server: {
 }
 
 // API服务封装 (services/api.ts)
-const API_BASE_URL = '/api/v2.0.0'
+const API_BASE_URL = '/api'
 
 export const todoApi = {
   getAllTodos: () => apiClient.get<Record<number, TodoItem>>(`${API_BASE_URL}/todos`),
@@ -366,7 +366,7 @@ npm run build
 ### 环境变量
 ```bash
 # 生产环境API地址
-VITE_API_BASE_URL=https://api.yourdomain.com/api/v2.0.0
+VITE_API_BASE_URL=https://api.yourdomain.com/api
 ```
 
 ## 🔍 调试技巧

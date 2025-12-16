@@ -159,7 +159,7 @@ npm run dev
 ## 🔌 API接口文档
 
 ### 基础信息
- - **基础URL**: `http://localhost:8000/api/v2.0.0`
+ - **基础URL**: `http://localhost:8000/api`
 - **API文档**: `http://localhost:8000/docs` (Swagger UI)
 - **交互式测试**: `http://localhost:8000/redoc`
 
@@ -197,7 +197,7 @@ npm run dev
 
 #### 创建待办事项
 ```http
- POST /api/v2.0.0/todos
+ POST /api/todos
 Content-Type: application/json
 
 {
@@ -212,7 +212,7 @@ Content-Type: application/json
 
 #### 更新待办事项
 ```http
- PATCH /api/v2.0.0/todos/1
+ PATCH /api/todos/1
 Content-Type: application/json
 
 {

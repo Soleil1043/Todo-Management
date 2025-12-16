@@ -1,7 +1,7 @@
 import axios, { AxiosError } from 'axios'
 import { TodoItem, TodoFormData } from '../types/todo'
 
-const API_BASE_URL = '/api/v2.0.0'
+const API_BASE_URL = '/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,

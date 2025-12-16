@@ -34,7 +34,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(todos_router, prefix="/api/v2.0.0", tags=["代办事项"])
+app.include_router(todos_router, prefix="/api", tags=["代办事项"])
 
 @app.get("/", tags=["根目录"])
 async def read_root():
@@ -43,7 +43,7 @@ async def read_root():
         "message": "欢迎使用代办事项API",
         "docs": "/docs",
         "redoc": "/redoc",
-        "version": "2.0.0"
+        "version": "2.2.0"
     }
 
 @app.get("/health", tags=["系统"])
