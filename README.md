@@ -5,6 +5,11 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 
+## 📋 版本信息
+- **当前版本**: v2.2.0
+
+> **💡 版本管理说明**: 本文档为版本信息统一管理入口，其他文档中的版本信息均已移除。更新版本时只需修改此处的版本号即可。
+
 一个功能完整的现代化待办事项管理应用，采用前后端分离架构，支持完整的CRUD操作、回收站管理、优先级分类和时间规划功能。
 
 ## ✨ 核心特性
@@ -44,6 +49,7 @@
 - **Pydantic** - 数据验证和序列化
 - **Uvicorn** - 高性能ASGI服务器
 - **分层架构** - 数据库层、服务层、路由层分离
+- **抽象存储层** - 支持多种存储后端（内存/数据库）
 
 **前端 (React 18 + TypeScript)**
 - **React 18** - 现代React框架
@@ -68,6 +74,7 @@ Todo-Management/
 │       ├── database.py        # 数据库连接配置
 │       ├── models.py          # SQLAlchemy数据库模型
 │       ├── db_storage.py      # 数据库存储实现
+│       ├── storage.py         # 存储抽象基类
 │       └── init_db.py         # 数据库初始化
 │
 ├── 📁 前端应用
@@ -180,6 +187,12 @@ npm run dev
 |------|------|------|
 | `GET` | `/stats` | 获取统计信息（总数/已完成/待完成/回收站数量）|
 
+#### 系统接口
+| 方法 | 路径 | 描述 |
+|------|------|------|
+| `GET` | `/` | API根路径，返回欢迎信息 |
+| `GET` | `/health` | 健康检查接口 |
+
 ### 请求示例
 
 #### 创建待办事项
@@ -234,6 +247,8 @@ enum Priority {
 
 ### 数据库模型
 **后端使用SQLAlchemy ORM，包含以下字段：**
+
+**todo_items表：**
 - `id`: 主键，自增
 - `title`: 标题（最大100字符）
 - `description`: 描述（最大500字符，可选）
@@ -244,6 +259,18 @@ enum Priority {
 - `created_at`: 创建时间
 - `updated_at`: 更新时间
 - `deleted`: 软删除标记
+
+**recycle_bin_items表：**
+- `id`: 主键，自增
+- `original_id`: 原始待办事项ID
+- `title`: 标题
+- `description`: 描述
+- `completed`: 完成状态
+- `priority`: 优先级
+- `start_time`: 开始时间
+- `end_time`: 结束时间
+- `created_at`: 原始创建时间
+- `deleted_at`: 删除时间
 
 ## 🎨 前端特性
 
@@ -315,6 +342,8 @@ isort .
 3. **数据持久化**: 使用SQLite数据库，数据自动持久化存储
 4. **数据库文件**: `todos.db` 文件会自动创建在项目根目录
 5. **性能优化**: 当前实现适用于中小型项目，大数据量时考虑分页
+6. **存储抽象**: 支持内存存储和数据库存储两种模式
+7. **软删除机制**: 删除的数据会进入回收站，可恢复或永久删除
 
 ## 🚀 后续扩展
 

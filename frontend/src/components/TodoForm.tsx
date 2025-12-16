@@ -17,13 +17,36 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.title.trim()) return
+    
+    // 表单验证
+    if (!formData.title.trim()) {
+      alert('请输入待办事项标题')
+      return
+    }
+    
+    if (formData.title.trim().length > 100) {
+      alert('标题长度不能超过100个字符')
+      return
+    }
+    
+    // 时间格式验证
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
+    if (formData.start_time && !timeRegex.test(formData.start_time)) {
+      alert('开始时间格式不正确，请使用 HH:MM 格式')
+      return
+    }
+    if (formData.end_time && !timeRegex.test(formData.end_time)) {
+      alert('结束时间格式不正确，请使用 HH:MM 格式')
+      return
+    }
     
     onSubmit(formData)
     setFormData({
       title: '',
       description: '',
       priority: Priority.MEDIUM,
+      start_time: '',
+      end_time: '',
     })
   }
 
@@ -46,6 +69,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
           placeholder="输入待办事项标题"
           className="form-input"
           required
+          maxLength={100}
         />
       </div>
       
@@ -57,7 +81,9 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
           placeholder="输入描述（可选）"
           className="form-textarea"
           rows={3}
+          maxLength={500}
         />
+        <small className="char-count">{(formData.description || '').length}/500</small>
       </div>
       
       <div className="form-group">

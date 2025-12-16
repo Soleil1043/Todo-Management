@@ -8,13 +8,21 @@ from database.database import get_db
 
 router = APIRouter()
 
-# 依赖注入函数
-def get_service(db: Session = Depends(get_db)) -> TodoService:
+# 单例存储实例
+_storage_instance = None
+
+def get_storage(db: Session = Depends(get_db)) -> DatabaseTodoStorage:
+    """获取数据库存储实例（单例模式）"""
+    global _storage_instance
+    if _storage_instance is None:
+        _storage_instance = DatabaseTodoStorage(db)
+    return _storage_instance
+
+def get_service(storage: DatabaseTodoStorage = Depends(get_storage)) -> TodoService:
     """获取TodoService实例"""
-    storage = DatabaseTodoStorage(db)
     return TodoService(storage)
 
-def _handle_not_found(result, message="未找到"):
+def _handle_not_found(result, message: str = "未找到"):
     """统一处理未找到的情况"""
     if not result:
         raise HTTPException(status_code=404, detail=message)

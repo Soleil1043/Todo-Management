@@ -2,45 +2,62 @@ from typing import Dict, Optional, List
 from sqlalchemy.orm import Session
 from database.models import TodoItemDB, RecycleBinItemDB, Priority
 from models.model import TodoItem
-from database.database import get_db
 import datetime
+import logging
+
+logger = logging.getLogger(__name__)
 
 class DatabaseTodoStorage:
     """数据库待办事项存储类"""
     
     def __init__(self, db: Session):
+        """初始化数据库存储"""
         self.db = db
     
     def get_all_todos(self) -> Dict[int, TodoItem]:
         """获取所有未删除的待办事项"""
-        todos = self.db.query(TodoItemDB).filter(TodoItemDB.deleted == False).all()
-        return {todo.id: self._db_to_pydantic(todo) for todo in todos}
+        try:
+            todos = self.db.query(TodoItemDB).filter(TodoItemDB.deleted == False).all()
+            return {todo.id: self._db_to_pydantic(todo) for todo in todos}
+        except Exception as e:
+            logger.error(f"获取所有待办事项失败: {e}")
+            return {}
     
     def get_todo_by_id(self, todo_id: int) -> Optional[TodoItem]:
         """根据ID获取待办事项"""
-        todo = self.db.query(TodoItemDB).filter(
-            TodoItemDB.id == todo_id,
-            TodoItemDB.deleted == False
-        ).first()
-        return self._db_to_pydantic(todo) if todo else None
+        try:
+            todo = self.db.query(TodoItemDB).filter(
+                TodoItemDB.id == todo_id,
+                TodoItemDB.deleted == False
+            ).first()
+            return self._db_to_pydantic(todo) if todo else None
+        except Exception as e:
+            logger.error(f"获取待办事项失败 (ID: {todo_id}): {e}")
+            return None
     
     def add_todo(self, todo: TodoItem) -> TodoItem:
         """添加新的待办事项"""
-        db_todo = TodoItemDB(
-            title=todo.title,
-            description=todo.description,
-            completed=todo.completed,
-            priority=Priority(todo.priority),
-            start_time=todo.start_time,
-            end_time=todo.end_time
-        )
-        self.db.add(db_todo)
-        self.db.commit()
-        self.db.refresh(db_todo)
-        
-        # 返回包含ID的Pydantic模型
-        result = self._db_to_pydantic(db_todo)
-        return result
+        try:
+            db_todo = TodoItemDB(
+                title=todo.title,
+                description=todo.description,
+                completed=todo.completed,
+                priority=Priority(todo.priority),
+                start_time=todo.start_time,
+                end_time=todo.end_time
+            )
+            self.db.add(db_todo)
+            self.db.commit()
+            self.db.refresh(db_todo)
+            
+            # 返回包含ID的Pydantic模型
+            result = self._db_to_pydantic(db_todo)
+            logger.info(f"成功添加待办事项: {result.title} (ID: {result.id})")
+            return result
+        except Exception as e:
+            self.db.rollback()
+            logger.error(f"添加待办事项失败: {e}")
+            raise
     
     def update_todo(self, todo_id: int, **kwargs) -> bool:
         """更新待办事项的属性"""

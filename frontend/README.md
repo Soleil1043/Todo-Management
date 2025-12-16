@@ -49,25 +49,27 @@ frontend/
 ├── 📁 源代码
 │   └── src/
 │       ├── 📁 组件层
-│       │   ├── TodoForm.tsx      # 添加待办事项表单
-│       │   ├── TodoList.tsx      # 待办事项列表容器
-│       │   ├── TodoItem.tsx      # 单个待办事项组件
-│       │   ├── TimeSelector.tsx  # 时间选择组件
-│       │   └── RecycleBin.tsx    # 回收站模态框
+│       │   ├── TodoForm.tsx      # 添加待办事项表单组件
+│       │   ├── TodoList.tsx      # 待办事项列表容器组件
+│       │   ├── TodoItem.tsx      # 单个待办事项展示组件
+│       │   ├── TimeSelector.tsx  # 时间选择下拉组件
+│       │   └── RecycleBin.tsx    # 回收站管理模态框
 │       ├── 📁 服务层
-│       │   └── api.ts           # API服务封装
+│       │   └── api.ts           # Axios API服务封装
 │       ├── 📁 类型定义
-│       │   └── todo.ts          # TypeScript类型
+│       │   └── todo.ts          # TypeScript接口定义
 │       ├── 📁 样式
-│       │   ├── App.css          # 主应用样式
-│       │   └── index.css        # 全局样式
-│       ├── App.tsx              # 主应用组件
-│       └── main.tsx             # 应用入口
+│       │   ├── App.css          # 主应用样式文件
+│       │   └── index.css        # 全局样式文件
+│       ├── App.tsx              # 主应用组件和状态管理
+│       └── main.tsx             # React应用入口文件
 ├── 📁 配置文件
-│   ├── vite.config.ts          # Vite构建配置
-│   ├── tsconfig.json           # TypeScript配置
-│   └── package.json            # 项目依赖
-└── 📖 README.md                # 前端文档
+│   ├── vite.config.ts          # Vite构建工具配置
+│   ├── tsconfig.json           # TypeScript编译配置
+│   ├── tsconfig.node.json      # Node端TypeScript配置
+│   ├── vite.config.ts          # Vite开发服务器配置
+│   └── package.json            # 项目依赖和脚本
+└── 📖 README.md                # 前端开发文档
 ```
 
 ### 组件架构
@@ -126,38 +128,75 @@ npm run preview
 ## 🔧 开发指南
 
 ### API服务配置
-前端通过代理配置与后端通信：
+前端通过Vite代理配置与后端API通信：
 
 ```typescript
-// vite.config.ts
+// vite.config.ts 代理配置
 server: {
   proxy: {
     '/api': {
       target: 'http://localhost:8000',
       changeOrigin: true,
+      // 无需重写路径，保持/api前缀
     }
   }
+}
+
+// API服务封装 (services/api.ts)
+const API_BASE_URL = '/api/v2.0.0'
+
+export const todoApi = {
+  getAllTodos: () => apiClient.get<Record<number, TodoItem>>(`${API_BASE_URL}/todos`),
+  createTodo: (todo: TodoItem) => apiClient.post<TodoItem>(`${API_BASE_URL}/todos`, todo),
+  updateTodo: (id: number, todo: Partial<TodoItem>) =>
+    apiClient.patch<TodoItem>(`${API_BASE_URL}/todos/${id}`, todo),
+  deleteTodo: (id: number) => apiClient.delete(`${API_BASE_URL}/todos/${id}`),
+  toggleTodoStatus: (id: number) =>
+    apiClient.patch<TodoItem>(`${API_BASE_URL}/todos/${id}/toggle`),
+  // 回收站相关API
+  getRecycleBin: () => apiClient.get<Record<number, TodoItem>>(`${API_BASE_URL}/recycle-bin`),
+  restoreTodo: (id: number) =>
+    apiClient.post<TodoItem>(`${API_BASE_URL}/recycle-bin/${id}/restore`),
+  permanentlyDeleteTodo: (id: number) =>
+    apiClient.delete(`${API_BASE_URL}/recycle-bin/${id}`),
+  clearRecycleBin: () => apiClient.delete(`${API_BASE_URL}/recycle-bin`),
 }
 ```
 
 ### 类型定义
 ```typescript
-// 待办事项接口
-interface TodoItem {
-  id?: number;
+// 待办事项完整接口 (types/todo.ts)
+export interface TodoItem {
+  id?: number;                    // 唯一标识符，可选
+  title: string;                  // 标题，必填
+  description?: string;           // 描述，可选
+  completed: boolean;             // 完成状态
+  priority: Priority;             // 优先级枚举
+  start_time?: string;            // 开始时间 (HH:MM格式)
+  end_time?: string;              // 结束时间 (HH:MM格式)
+}
+
+// 待办事项表单数据接口
+export interface TodoFormData {
   title: string;
   description?: string;
-  completed: boolean;
   priority: Priority;
   start_time?: string;
   end_time?: string;
 }
 
 // 优先级枚举
-enum Priority {
-  HIGH = 'high',
-  MEDIUM = 'medium',
-  LOW = 'low'
+export enum Priority {
+  HIGH = 'high',      // 高优先级
+  MEDIUM = 'medium',  // 中优先级
+  LOW = 'low'         // 低优先级
+}
+
+// API响应类型
+export type TodoApiResponse<T> = {
+  data: T;
+  status: number;
+  message?: string;
 }
 ```
 
@@ -166,6 +205,8 @@ enum Priority {
 2. **类型安全** - 使用TypeScript确保类型正确
 3. **可复用性** - 组件设计考虑复用场景
 4. **性能优化** - 合理使用React Hooks和memo
+5. **错误边界** - 优雅处理组件错误
+6. **状态管理** - 局部状态与全局状态分离
 
 ## 🎨 样式系统
 
@@ -177,18 +218,35 @@ enum Priority {
 
 ### CSS架构
 ```css
-/* 组件化样式 */
-.todo-item { /* 单个事项样式 */ }
-.todo-form { /* 表单样式 */ }
+/* 组件化样式系统 */
+.todo-item { /* 单个待办事项卡片 */ }
+.todo-form { /* 添加表单容器 */ }
 .recycle-bin-modal { /* 回收站模态框 */ }
+.recycle-bin-item { /* 回收站项目卡片 */ }
 
-/* 工具类 */
-.loading { /* 加载状态 */ }
-.empty-state { /* 空状态 */ }
-.error-message { /* 错误提示 */ }
+/* 工具类和状态 */
+.loading { /* 加载状态指示器 */ }
+.empty-state { /* 空列表提示 */ }
+.error-message { /* 错误信息展示 */ }
+.stats { /* 统计信息样式 */ }
 
-/* 响应式断点 */
-@media (max-width: 600px) { /* 移动端适配 */ }
+/* 优先级颜色编码 */
+.priority-high { background-color: #ffebee; color: #c62828; }
+.priority-medium { background-color: #fff3e0; color: #ef6c00; }
+.priority-low { background-color: #e8f5e8; color: #2e7d32; }
+
+/* 响应式断点设计 */
+@media (max-width: 600px) {
+  /* 移动端适配：堆叠布局，增大触摸目标 */
+  .todo-item { flex-direction: column; }
+  .btn-recycle-bin { font-size: 14px; padding: 8px 12px; }
+}
+
+@media (max-width: 400px) {
+  /* 小屏手机优化 */
+  .app-header h1 { font-size: 1.5rem; }
+  .stats { font-size: 0.9rem; }
+}
 ```
 
 ## 📱 响应式设计
@@ -208,34 +266,63 @@ enum Priority {
 ### 服务端点
 ```typescript
 // 待办事项管理
-GET    /api/v2.0.0/todos              // 获取所有待办事项
-POST   /api/v2.0.0/todos              // 创建新的待办事项
-PATCH  /api/v2.0.0/todos/:id          // 更新待办事项
-PATCH  /api/v2.0.0/todos/:id/toggle   // 切换完成状态
-DELETE /api/v2.0.0/todos/:id          // 删除到回收站
+GET    /api/todos              // 获取所有待办事项
+POST   /api/todos              // 创建新的待办事项
+PATCH  /api/todos/:id          // 更新待办事项
+PATCH  /api/todos/:id/toggle   // 切换完成状态
+DELETE /api/todos/:id          // 删除到回收站
 
 // 回收站管理
-GET    /api/v2.0.0/recycle-bin                    // 获取回收站
-POST   /api/v2.0.0/recycle-bin/:id/restore        // 恢复项目
-DELETE /api/v2.0.0/recycle-bin/:id                // 永久删除
-DELETE /api/v2.0.0/recycle-bin                    // 清空回收站
+GET    /api/recycle-bin                    // 获取回收站
+POST   /api/recycle-bin/:id/restore        // 恢复项目
+DELETE /api/recycle-bin/:id                // 永久删除
+DELETE /api/recycle-bin                    // 清空回收站
 
 // 统计信息
-GET    /api/v2.0.0/stats                          // 获取统计信息
+GET    /api/stats                          // 获取统计信息
 ```
 
 ### 错误处理
 ```typescript
-// 统一的错误处理
-try {
-  const data = await todoApi.getAllTodos();
-  setTodos(data);
-} catch (error) {
-  setError('加载待办事项失败');
-  console.error('Error:', error);
-} finally {
-  setLoading(false);
+// 统一的错误处理机制
+const loadTodos = async () => {
+  try {
+    setLoading(true)
+    setError(null)
+    const data = await todoApi.getAllTodos()
+    setTodos(Object.values(data))
+  } catch (error) {
+    setError('加载待办事项失败，请稍后重试')
+    console.error('Error loading todos:', error)
+  } finally {
+    setLoading(false)
+  }
 }
+
+// 用户友好的错误提示
+{error && (
+  <div className="error-message">
+    {error}
+    <button onClick={() => setError(null)} className="btn-close">×</button>
+  </div>
+)}
+```
+
+### 状态管理
+```typescript
+// 主应用状态管理
+const [todos, setTodos] = useState<TodoItem[]>([])
+const [loading, setLoading] = useState(true)
+const [error, setError] = useState<string | null>(null)
+const [isRecycleBinOpen, setIsRecycleBinOpen] = useState(false)
+
+// 实时统计计算
+const completedCount = todos.filter(todo => todo.completed).length
+const totalCount = todos.length
+
+// 回收站状态管理
+const [recycledTodos, setRecycledTodos] = useState<TodoItem[]>([])
+const [recycleLoading, setRecycleLoading] = useState(false)
 ```
 
 ## ⚡ 性能优化

@@ -6,6 +6,7 @@ class TodoService:
     """待办事项业务逻辑服务类，负责处理所有业务逻辑"""
     
     def __init__(self, storage: TodoStorage):
+        """初始化服务，注入存储依赖"""
         self.storage = storage
     
     def get_all_todos(self) -> dict:

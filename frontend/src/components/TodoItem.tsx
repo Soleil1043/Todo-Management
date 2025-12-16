@@ -32,7 +32,24 @@ const TodoItem: React.FC<TodoItemProps> = ({
   }, [todo, isEditing])
 
   const handleSave = () => {
-    onUpdate(todo.id!, editTitle, editDescription, editStartTime, editEndTime)
+    // 输入验证
+    if (!editTitle.trim()) {
+      alert('标题不能为空')
+      return
+    }
+    
+    // 时间格式验证
+    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
+    if (editStartTime && !timeRegex.test(editStartTime)) {
+      alert('开始时间格式不正确，请使用 HH:MM 格式')
+      return
+    }
+    if (editEndTime && !timeRegex.test(editEndTime)) {
+      alert('结束时间格式不正确，请使用 HH:MM 格式')
+      return
+    }
+    
+    onUpdate(todo.id!, editTitle.trim(), editDescription.trim(), editStartTime, editEndTime)
     setIsEditing(false)
   }
 
@@ -67,13 +84,15 @@ const TodoItem: React.FC<TodoItemProps> = ({
             onChange={(e) => setEditTitle(e.target.value)}
             className="edit-input"
             placeholder="标题"
+            maxLength={100}
           />
-          <input
-            type="text"
+          <textarea
             value={editDescription}
             onChange={(e) => setEditDescription(e.target.value)}
-            className="edit-input"
+            className="edit-textarea"
             placeholder="描述（可选）"
+            rows={2}
+            maxLength={500}
           />
           <div className="edit-row">
             <TimeSelector
