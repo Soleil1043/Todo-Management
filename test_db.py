@@ -6,7 +6,7 @@ import json
 import time
 
 # API基础URL
-BASE_URL = "http://localhost:8000/api/v2.0.0"
+BASE_URL = "http://localhost:8000/api"
 
 def test_create_todo():
     """测试创建待办事项"""

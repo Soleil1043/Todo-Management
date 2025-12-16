@@ -20,7 +20,6 @@ except Exception as e:
 app = FastAPI(
     title="待办事项API",
     description="FastAPI的后端文档界面",
-    version="2.0.0",
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -42,8 +41,7 @@ async def read_root():
     return {
         "message": "欢迎使用代办事项API",
         "docs": "/docs",
-        "redoc": "/redoc",
-        "version": "2.2.0"
+        "redoc": "/redoc"
     }
 
 @app.get("/health", tags=["系统"])

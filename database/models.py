@@ -1,11 +1,11 @@
 from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLEnum
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
-import enum
+from enum import Enum
 
 Base = declarative_base()
 
-class Priority(str, enum.Enum):
+class Priority(str, Enum):
     """优先级枚举"""
     HIGH = "high"
     MEDIUM = "medium"
