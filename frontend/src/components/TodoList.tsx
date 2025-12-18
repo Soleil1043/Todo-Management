@@ -1,12 +1,12 @@
 import React from 'react'
-import { TodoSchema } from '../types/todo'
+import { TodoSchema, PriorityType } from '../types/todo'
 import TodoItemComponent from './TodoItem'
 
 interface TodoListProps {
   todos: TodoSchema[]
   onToggleComplete: (id: number) => void
   onDelete: (id: number) => void
-  onUpdate: (id: number, title: string, description: string, start_time?: string, end_time?: string) => void
+  onUpdate: (id: number, title: string, description: string, priority: PriorityType, start_time?: string, end_time?: string) => void
 }
 
 const TodoList: React.FC<TodoListProps> = ({
@@ -38,4 +38,4 @@ const TodoList: React.FC<TodoListProps> = ({
   )
 }
 
-export default TodoList
+export default React.memo(TodoList)

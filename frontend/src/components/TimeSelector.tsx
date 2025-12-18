@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback } from 'react'
+import React, { useMemo, useCallback, useId } from 'react'
 
 interface TimeSelectorProps {
   label: string
@@ -8,6 +8,7 @@ interface TimeSelectorProps {
   disabled?: boolean
   minTime?: string
   maxTime?: string
+  id?: string
 }
 
 // 使用useMemo缓存时间选项生成，避免重复计算
@@ -43,9 +44,12 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   required = false,
   disabled = false,
   minTime,
-  maxTime
+  maxTime,
+  id
 }) => {
   const timeOptions = useTimeOptions(minTime, maxTime)
+  const generatedId = useId()
+  const selectId = id || `time-selector-${generatedId}`
 
   // 使用useCallback优化事件处理函数
   const handleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
@@ -60,12 +64,12 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
 
   return (
     <div className="time-selector">
-      <label className="form-label" htmlFor={`time-selector-${label}`}>
+      <label className="form-label" htmlFor={selectId}>
         {label}
         {required && <span className="required" aria-label="必填">*</span>}
       </label>
       <select
-        id={`time-selector-${label}`}
+        id={selectId}
         value={isValidValue ? value || '' : ''}
         onChange={handleChange}
         className="form-select"

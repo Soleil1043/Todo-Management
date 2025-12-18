@@ -2,6 +2,7 @@ import uvicorn
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routers.todos import router as todos_router
+from routers.settings import router as settings_router
 from database.init_db import init_db
 import logging
 
@@ -34,6 +35,7 @@ app.add_middleware(
 )
 
 app.include_router(todos_router, prefix="/api", tags=["代办事项"])
+app.include_router(settings_router, prefix="/api", tags=["系统设置"])
 
 @app.get("/", tags=["根目录"])
 async def read_root():

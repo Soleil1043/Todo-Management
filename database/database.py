@@ -55,7 +55,6 @@ SessionLocal = sessionmaker(
     autoflush=False,
     bind=engine,
     expire_on_commit=False,  # 提高性能，避免不必要的查询
-    class_=sessionmaker,  # 使用标准会话类
 )
 
 # 获取数据库会话的依赖函数 - 添加上下文管理

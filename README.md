@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 
 ## 📋 版本信息
-- **当前版本**: v2.2.2
+- **当前版本**: v2.2.3
 
 > **💡 版本管理说明**: 本文档为版本信息统一管理入口，其他文档中的版本信息均已移除。更新版本时只需修改此处的版本号即可。
 

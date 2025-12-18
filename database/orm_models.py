@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLEnum
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, Enum as SQLEnum, LargeBinary
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
 from enum import Enum
@@ -97,3 +97,16 @@ class RecycleBinORM(Base):
             'created_at': self.created_at.isoformat() if self.created_at else None,  # type: ignore
             'deleted_at': self.deleted_at.isoformat() if self.deleted_at else None  # type: ignore
         }
+
+class SystemSettingORM(Base):
+    """系统设置表，存储壁纸等设置"""
+    __tablename__ = "system_settings"
+
+    key = Column(String(50), primary_key=True, index=True)
+    value = Column(String(500), nullable=True) # 存储普通文本设置
+    blob_value = Column(LargeBinary, nullable=True) # 存储二进制数据，如壁纸
+    content_type = Column(String(50), nullable=True) # 存储MIME类型
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now(), server_default=func.now())
+    
+    def __repr__(self):
+        return f"<SystemSettingORM(key='{self.key}', updated_at={self.updated_at})>"

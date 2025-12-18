@@ -22,3 +22,6 @@ frontend/.vite/
 .DS_Store
 Thumbs.db
 todos.db
+todos.db-shm
+todos.db-wal
+*.png

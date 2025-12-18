@@ -32,6 +32,8 @@ class TodoSchema(BaseModel):
         """验证时间格式（HH:MM）"""
         if v is None:
             return v
+        if isinstance(v, str) and not v.strip():
+            return None
         if not isinstance(v, str):
             raise ValueError('时间必须是字符串格式')
         if len(v) != 5 or v[2] != ':':

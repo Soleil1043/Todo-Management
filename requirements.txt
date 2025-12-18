@@ -3,3 +3,4 @@ fastapi
 pydantic
 sqlalchemy
 alembic
+python-multipart

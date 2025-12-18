@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useState, useCallback, useMemo, useRef } from 'react'
 import { TodoFormData, Priority } from '../types/todo'
 import TimeSelector from './TimeSelector'
 import { isValidTimeFormat } from '../services/api'
@@ -15,6 +15,8 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
     start_time: '',
     end_time: '',
   })
+  const [formError, setFormError] = useState<string | null>(null)
+  const titleInputRef = useRef<HTMLInputElement | null>(null)
 
   const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
@@ -22,26 +24,29 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
     // 表单验证
     const trimmedTitle = formData.title.trim()
     if (!trimmedTitle) {
-      alert('请输入待办事项标题')
+      setFormError('请输入待办事项标题')
+      titleInputRef.current?.focus()
       return
     }
     
     if (trimmedTitle.length > 100) {
-      alert('标题长度不能超过100个字符')
+      setFormError('标题长度不能超过100个字符')
+      titleInputRef.current?.focus()
       return
     }
     
     // 时间格式验证 - 使用工具函数
     if (formData.start_time && !isValidTimeFormat(formData.start_time)) {
-      alert('开始时间格式不正确，请使用 HH:MM 格式')
+      setFormError('开始时间格式不正确，请使用 HH:MM 格式')
       return
     }
     if (formData.end_time && !isValidTimeFormat(formData.end_time)) {
-      alert('结束时间格式不正确，请使用 HH:MM 格式')
+      setFormError('结束时间格式不正确，请使用 HH:MM 格式')
       return
     }
     
     // 提交数据
+    setFormError(null)
     onSubmit({
       ...formData,
       title: trimmedTitle,
@@ -60,6 +65,7 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
+    setFormError(null)
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -74,10 +80,20 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
 
   return (
     <form onSubmit={handleSubmit} className="todo-form" noValidate>
+      {formError ? (
+        <div className="form-error" role="alert" aria-live="polite">
+          {formError}
+        </div>
+      ) : null}
       <div className="form-group">
+        <label className="sr-only" htmlFor="todo-title">
+          待办标题
+        </label>
         <input
           type="text"
           name="title"
+          id="todo-title"
+          ref={titleInputRef}
           value={formData.title}
           onChange={handleChange}
           placeholder="输入待办事项标题"
@@ -88,8 +104,12 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
       </div>
       
       <div className="form-group">
+        <label className="sr-only" htmlFor="todo-description">
+          待办描述
+        </label>
         <textarea
           name="description"
+          id="todo-description"
           value={formData.description}
           onChange={handleChange}
           placeholder="输入描述（可选）"

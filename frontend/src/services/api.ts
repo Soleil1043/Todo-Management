@@ -1,7 +1,7 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
 import { TodoSchema } from '../types/todo';
 
-const API_BASE_URL = 'http://localhost:8000/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
 
 // 创建API实例
 const api: AxiosInstance = axios.create({
@@ -10,6 +10,13 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   },
   timeout: 10000, // 添加超时设置
+});
+
+const healthClient: AxiosInstance = axios.create({
+  headers: {
+    'Content-Type': 'application/json',
+  },
+  timeout: 5000,
 });
 
 // 添加响应拦截器进行统一错误处理
@@ -194,11 +201,48 @@ export const todoApi = {
 export const healthApi = {
   checkHealth: async (): Promise<{ status: string; service: string }> => {
     try {
-      const response = await api.get<{ status: string; service: string }>('/health');
+      const response = await healthClient.get<{ status: string; service: string }>('/health');
       return response.data;
     } catch (error) {
       console.error('健康检查失败:', error);
       throw new Error('无法连接到后端服务');
+    }
+  },
+};
+
+// 系统设置相关 API
+export const settingsApi = {
+  // 上传壁纸
+  uploadWallpaper: async (file: File): Promise<{ message: string }> => {
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      
+      const response = await api.post<{ message: string }>('/settings/wallpaper', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      return response.data;
+    } catch (error) {
+      console.error('上传壁纸失败:', error);
+      throw new Error('上传壁纸失败，请检查文件大小是否超过50MB');
+    }
+  },
+
+  // 获取壁纸URL
+  getWallpaperUrl: (): string => {
+    return `${API_BASE_URL}/settings/wallpaper`;
+  },
+
+  // 删除壁纸
+  deleteWallpaper: async (): Promise<{ message: string }> => {
+    try {
+      const response = await api.delete<{ message: string }>('/settings/wallpaper');
+      return response.data;
+    } catch (error) {
+      console.error('删除壁纸失败:', error);
+      throw new Error('删除壁纸失败');
     }
   },
 };
