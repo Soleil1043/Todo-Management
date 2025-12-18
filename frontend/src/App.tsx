@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import TodoForm from './components/TodoForm'
 import TodoList from './components/TodoList'
 import RecycleBin from './components/RecycleBin'
-import { TodoItem, TodoFormData } from './types/todo'
-import { todoApi } from './services/api'
+import { TodoSchema, TodoFormData } from './types/todo'
+import { todoApi, recordToArray } from './services/api'
 import './App.css'
 
 function App() {
-  const [todos, setTodos] = useState<TodoItem[]>([])
+  const [todos, setTodos] = useState<TodoSchema[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [isRecycleBinOpen, setIsRecycleBinOpen] = useState(false)
@@ -16,89 +16,117 @@ function App() {
     loadTodos()
   }, [])
 
-  const loadTodos = async () => {
+  // 使用useCallback避免不必要的重新创建
+  const loadTodos = useCallback(async () => {
     try {
       setLoading(true)
-      const data = await todoApi.getAllTodos()
-      setTodos(data)
       setError(null)
+      const data = await todoApi.getTodos()
+      // 使用工具函数转换数据格式
+      const todoArray = recordToArray(data)
+      setTodos(todoArray)
     } catch (err) {
-      setError('加载待办事项失败')
+      const errorMessage = err instanceof Error ? err.message : '加载待办事项失败'
+      setError(errorMessage)
       console.error('Error loading todos:', err)
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleAddTodo = async (data: TodoFormData) => {
+  const handleAddTodo = useCallback(async (data: TodoFormData) => {
     try {
+      setError(null)
       const newTodo = await todoApi.createTodo({
         ...data,
         completed: false
-      } as TodoItem)
-      setTodos([...todos, newTodo])
-      setError(null)
+      } as TodoSchema)
+      // 使用函数式更新避免依赖todos状态
+      setTodos(prevTodos => [...prevTodos, newTodo])
     } catch (err) {
-      setError('添加待办事项失败')
+      const errorMessage = err instanceof Error ? err.message : '添加待办事项失败'
+      setError(errorMessage)
       console.error('Error adding todo:', err)
     }
-  }
+  }, [])
 
-  const handleToggleComplete = async (id: number) => {
+  const handleToggleComplete = useCallback(async (id: number) => {
     try {
       const updatedTodo = await todoApi.toggleTodoStatus(id)
-      setTodos(todos.map(todo => 
-        todo.id === id ? { ...todo, completed: updatedTodo.completed } : todo
-      ))
+      // 使用函数式更新
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === id ? updatedTodo : todo
+        )
+      )
     } catch (err) {
-      setError('更新状态失败')
+      const errorMessage = err instanceof Error ? err.message : '更新状态失败'
+      setError(errorMessage)
       console.error('Error toggling status:', err)
     }
-  }
+  }, [])
 
-  const handleDeleteTodo = async (id: number) => {
+  const handleDeleteTodo = useCallback(async (id: number) => {
     try {
-      await todoApi.deleteTodo(id)
-      setTodos(todos.filter(todo => todo.id !== id))
       setError(null)
+      await todoApi.deleteTodo(id)
+      // 使用函数式更新
+      setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id))
     } catch (err) {
-      setError('删除待办事项失败')
+      const errorMessage = err instanceof Error ? err.message : '删除待办事项失败'
+      setError(errorMessage)
       console.error('Error deleting todo:', err)
     }
-  }
+  }, [])
 
-  const handleUpdateTodo = async (id: number, title: string, description: string, start_time?: string, end_time?: string) => {
+  const handleUpdateTodo = useCallback(async (id: number, title: string, description: string, start_time?: string, end_time?: string) => {
     try {
+      setError(null)
       const updatedTodo = await todoApi.updateTodo(id, {
         title,
         description,
         start_time,
         end_time
       })
-      setTodos(todos.map(todo => 
-        todo.id === id ? updatedTodo : todo
-      ))
-      setError(null)
+      // 使用函数式更新
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === id ? updatedTodo : todo
+        )
+      )
     } catch (err) {
-      setError('更新待办事项失败')
+      const errorMessage = err instanceof Error ? err.message : '更新待办事项失败'
+      setError(errorMessage)
       console.error('Error updating todo:', err)
     }
-  }
+  }, [])
 
-  const completedCount = todos.filter(todo => todo.completed).length
-  const totalCount = todos.length
+  // 使用useMemo优化计算性能
+  const completedCount = useMemo(() =>
+    todos.filter(todo => todo.completed).length,
+    [todos]
+  )
+  
+  const totalCount = useMemo(() => todos.length, [todos])
 
-  const handleRestoreTodo = (todo: TodoItem) => {
-    setTodos([...todos, todo])
-  }
+  const handleRestoreTodo = useCallback((todo: TodoSchema) => {
+    setTodos(prevTodos => {
+      const exists = prevTodos.some(t => t.id === todo.id)
+      if (exists) {
+        return prevTodos.map(t => (t.id === todo.id ? todo : t))
+      }
+      return [...prevTodos, todo]
+    })
+  }, [])
 
-  const handlePermanentlyDelete = (_id: number) => {
+  // 空函数优化 - 使用useCallback避免重新创建
+  const handlePermanentlyDelete = useCallback((_id: number) => {
     // 无需更新主列表，已在回收站组件中处理
-  }
+  }, [])
 
-  const handleClearBin = () => {
+  const handleClearBin = useCallback(() => {
     // 无需更新主列表，已在回收站组件中处理
-  }
+  }, [])
 
   return (
     <div className="app">
@@ -122,7 +150,13 @@ function App() {
         {error && (
           <div className="error-message">
             {error}
-            <button onClick={() => setError(null)} className="btn-close">×</button>
+            <button
+              onClick={() => setError(null)}
+              className="btn-close"
+              aria-label="关闭错误消息"
+            >
+              ×
+            </button>
           </div>
         )}
 

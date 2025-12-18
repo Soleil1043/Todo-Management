@@ -1,6 +1,7 @@
-import React, { useState } from 'react'
+import React, { useState, useCallback, useMemo } from 'react'
 import { TodoFormData, Priority } from '../types/todo'
 import TimeSelector from './TimeSelector'
+import { isValidTimeFormat } from '../services/api'
 
 interface TodoFormProps {
   onSubmit: (data: TodoFormData) => void
@@ -15,32 +16,39 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
     end_time: '',
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = useCallback((e: React.FormEvent) => {
     e.preventDefault()
     
     // 表单验证
-    if (!formData.title.trim()) {
+    const trimmedTitle = formData.title.trim()
+    if (!trimmedTitle) {
       alert('请输入待办事项标题')
       return
     }
     
-    if (formData.title.trim().length > 100) {
+    if (trimmedTitle.length > 100) {
       alert('标题长度不能超过100个字符')
       return
     }
     
-    // 时间格式验证
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
-    if (formData.start_time && !timeRegex.test(formData.start_time)) {
+    // 时间格式验证 - 使用工具函数
+    if (formData.start_time && !isValidTimeFormat(formData.start_time)) {
       alert('开始时间格式不正确，请使用 HH:MM 格式')
       return
     }
-    if (formData.end_time && !timeRegex.test(formData.end_time)) {
+    if (formData.end_time && !isValidTimeFormat(formData.end_time)) {
       alert('结束时间格式不正确，请使用 HH:MM 格式')
       return
     }
     
-    onSubmit(formData)
+    // 提交数据
+    onSubmit({
+      ...formData,
+      title: trimmedTitle,
+      description: formData.description?.trim()
+    })
+    
+    // 重置表单
     setFormData({
       title: '',
       description: '',
@@ -48,18 +56,24 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
       start_time: '',
       end_time: '',
     })
-  }
+  }, [formData, onSubmit])
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const handleChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
       ...prev,
       [name]: value
     }))
-  }
+  }, [])
+
+  // 使用useMemo优化字符计数
+  const descriptionLength = useMemo(() =>
+    (formData.description || '').length,
+    [formData.description]
+  )
 
   return (
-    <form onSubmit={handleSubmit} className="todo-form">
+    <form onSubmit={handleSubmit} className="todo-form" noValidate>
       <div className="form-group">
         <input
           type="text"
@@ -82,8 +96,9 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
           className="form-textarea"
           rows={3}
           maxLength={500}
+          aria-describedby="description-help"
         />
-        <small className="char-count">{(formData.description || '').length}/500</small>
+        <small id="description-help" className="char-count">{descriptionLength}/500</small>
       </div>
       
       <div className="form-group">
@@ -106,19 +121,29 @@ const TodoForm: React.FC<TodoFormProps> = ({ onSubmit }) => {
           <TimeSelector
             label="开始时间"
             value={formData.start_time}
-            onChange={(value) => handleChange({ target: { name: 'start_time', value } } as any)}
+            onChange={useCallback((value: string) =>
+              handleChange({ target: { name: 'start_time', value } } as any),
+              [handleChange]
+            )}
           />
         </div>
         <div className="form-group">
           <TimeSelector
             label="结束时间"
             value={formData.end_time}
-            onChange={(value) => handleChange({ target: { name: 'end_time', value } } as any)}
+            onChange={useCallback((value: string) =>
+              handleChange({ target: { name: 'end_time', value } } as any),
+              [handleChange]
+            )}
           />
         </div>
       </div>
       
-      <button type="submit" className="btn-submit">
+      <button
+        type="submit"
+        className="btn-submit"
+        disabled={!formData.title.trim()}
+      >
         添加待办事项
       </button>
     </form>

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react'
-import { TodoItem } from '../types/todo'
-import { todoApi } from '../services/api'
+import React, { useState, useEffect, useCallback } from 'react'
+import { TodoSchema } from '../types/todo'
+import { todoApi, recordToArray } from '../services/api'
 
 interface RecycleBinProps {
   isOpen: boolean
   onClose: () => void
-  onRestore: (todo: TodoItem) => void
+  onRestore: (todo: TodoSchema) => void
   onPermanentlyDelete: (id: number) => void
   onClearBin: () => void
 }
@@ -17,7 +17,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
   onPermanentlyDelete,
   onClearBin,
 }) => {
-  const [recycledTodos, setRecycledTodos] = useState<TodoItem[]>([])
+  const [recycledTodos, setRecycledTodos] = useState<TodoSchema[]>([])
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -26,41 +26,53 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
     }
   }, [isOpen])
 
-  const loadRecycleBin = async () => {
+  const loadRecycleBin = useCallback(async () => {
     try {
       setLoading(true)
       const data = await todoApi.getRecycleBin()
-      setRecycledTodos(data)
+      // 使用工具函数转换数据格式
+      const todoArray = recordToArray(data)
+      setRecycledTodos(todoArray)
     } catch (error) {
       console.error('加载回收站失败:', error)
+      // 可以添加用户友好的错误提示
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const handleRestore = async (todo: TodoItem) => {
+  const handleRestore = useCallback(async (todo: TodoSchema) => {
     try {
-      await todoApi.restoreTodo(todo.id!)
-      setRecycledTodos(recycledTodos.filter(t => t.id !== todo.id))
+      if (!todo.id) {
+        console.error('待办事项ID不存在')
+        return
+      }
+      
+      await todoApi.restoreTodo(todo.id)
+      // 使用函数式更新避免依赖recycledTodos状态
+      setRecycledTodos(prev => prev.filter(t => t.id !== todo.id))
       onRestore(todo)
     } catch (error) {
       console.error('恢复失败:', error)
+      // 可以添加用户友好的错误提示
     }
-  }
+  }, [onRestore])
 
-  const handlePermanentDelete = async (id: number) => {
+  const handlePermanentDelete = useCallback(async (id: number) => {
     if (window.confirm('确定要永久删除吗？此操作不可恢复！')) {
       try {
         await todoApi.permanentlyDeleteTodo(id)
-        setRecycledTodos(recycledTodos.filter(t => t.id !== id))
+        // 使用函数式更新
+        setRecycledTodos(prev => prev.filter(t => t.id !== id))
         onPermanentlyDelete(id)
       } catch (error) {
         console.error('永久删除失败:', error)
+        alert('永久删除失败，请重试')
       }
     }
-  }
+  }, [onPermanentlyDelete])
 
-  const handleClearBin = async () => {
+  const handleClearBin = useCallback(async () => {
     if (window.confirm('确定要清空回收站吗？此操作不可恢复！')) {
       try {
         await todoApi.clearRecycleBin()
@@ -68,9 +80,46 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
         onClearBin()
       } catch (error) {
         console.error('清空回收站失败:', error)
+        alert('清空回收站失败，请重试')
       }
     }
-  }
+  }, [onClearBin])
+
+  const handleBatchRestore = useCallback(async () => {
+    if (recycledTodos.length === 0) return
+    
+    if (window.confirm(`确定要恢复回收站中的 ${recycledTodos.length} 个待办事项吗？`)) {
+      try {
+        setLoading(true)
+        // 过滤掉无效的ID
+        const todoIds = recycledTodos
+          .map(todo => todo.id)
+          .filter((id): id is number => id !== undefined && id !== null)
+        
+        if (todoIds.length === 0) {
+          alert('没有有效的待办事项可以恢复')
+          return
+        }
+        
+        const result = await todoApi.batchRestoreTodos(todoIds)
+        
+        // 清空回收站列表
+        setRecycledTodos([])
+        
+        // 通知父组件恢复成功
+        result.restored_todos.forEach(todo => {
+          onRestore(todo)
+        })
+        
+        console.log(`成功恢复了 ${result.restored_todos.length} 个待办事项`)
+      } catch (error) {
+        console.error('批量恢复失败:', error)
+        alert('批量恢复失败，请重试')
+      } finally {
+        setLoading(false)
+      }
+    }
+  }, [recycledTodos, onRestore])
 
   if (!isOpen) return null
 
@@ -83,8 +132,15 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
         </div>
         
         <div className="recycle-bin-actions">
-          <button 
-            className="btn-clear" 
+          <button
+            className="btn-restore-all"
+            onClick={handleBatchRestore}
+            disabled={recycledTodos.length === 0 || loading}
+          >
+            一键恢复全部
+          </button>
+          <button
+            className="btn-clear"
             onClick={handleClearBin}
             disabled={recycledTodos.length === 0}
           >
@@ -106,8 +162,8 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
                   <h4>{todo.title}</h4>
                   {todo.description && <p>{todo.description}</p>}
                   <div className="item-meta">
-                    <span className="priority-badge priority-{todo.priority}">
-                      {todo.priority === 'high' ? '高' : 
+                    <span className={`priority-badge priority-${todo.priority}`}>
+                      {todo.priority === 'high' ? '高' :
                        todo.priority === 'medium' ? '中' : '低'}优先级
                     </span>
                     {(todo.start_time || todo.end_time) && (
@@ -120,15 +176,17 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
                   </div>
                 </div>
                 <div className="item-actions">
-                  <button 
-                    className="btn-restore" 
-                    onClick={() => handleRestore(todo)}
+                  <button
+                    className="btn-restore"
+                    onClick={useCallback(() => handleRestore(todo), [handleRestore, todo])}
+                    disabled={loading}
                   >
                     恢复
                   </button>
-                  <button 
-                    className="btn-delete-permanent" 
-                    onClick={() => handlePermanentDelete(todo.id!)}
+                  <button
+                    className="btn-delete-permanent"
+                    onClick={useCallback(() => handlePermanentDelete(todo.id!), [handlePermanentDelete, todo.id])}
+                    disabled={loading}
                   >
                     永久删除
                   </button>

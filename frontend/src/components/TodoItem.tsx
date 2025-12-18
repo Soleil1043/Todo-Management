@@ -1,9 +1,10 @@
-import React, { useState } from 'react'
-import { TodoItem as TodoItemType, Priority } from '../types/todo'
+import React, { useState, useCallback, useMemo } from 'react'
+import { TodoSchema } from '../types/todo'
 import TimeSelector from './TimeSelector'
+import { isValidTimeFormat } from '../services/api'
 
 interface TodoItemProps {
-  todo: TodoItemType
+  todo: TodoSchema
   onToggleComplete: (id: number) => void
   onDelete: (id: number) => void
   onUpdate: (id: number, title: string, description: string, start_time?: string, end_time?: string) => void
@@ -31,51 +32,62 @@ const TodoItem: React.FC<TodoItemProps> = ({
     }
   }, [todo, isEditing])
 
-  const handleSave = () => {
+  const handleSave = useCallback(() => {
     // 输入验证
-    if (!editTitle.trim()) {
+    const trimmedTitle = editTitle.trim()
+    if (!trimmedTitle) {
       alert('标题不能为空')
       return
     }
     
-    // 时间格式验证
-    const timeRegex = /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/
-    if (editStartTime && !timeRegex.test(editStartTime)) {
+    // 时间格式验证 - 使用工具函数
+    if (editStartTime && !isValidTimeFormat(editStartTime)) {
       alert('开始时间格式不正确，请使用 HH:MM 格式')
       return
     }
-    if (editEndTime && !timeRegex.test(editEndTime)) {
+    if (editEndTime && !isValidTimeFormat(editEndTime)) {
       alert('结束时间格式不正确，请使用 HH:MM 格式')
       return
     }
     
-    onUpdate(todo.id!, editTitle.trim(), editDescription.trim(), editStartTime, editEndTime)
+    onUpdate(todo.id!, trimmedTitle, editDescription.trim(), editStartTime, editEndTime)
     setIsEditing(false)
-  }
+  }, [editTitle, editDescription, editStartTime, editEndTime, onUpdate, todo.id])
 
-  const handleCancel = () => {
+  const handleCancel = useCallback(() => {
     setEditTitle(todo.title)
     setEditDescription(todo.description || '')
     setEditStartTime(todo.start_time || '')
     setEditEndTime(todo.end_time || '')
     setIsEditing(false)
-  }
+  }, [todo])
 
-  const getPriorityClass = (priority: Priority) => {
-    switch (priority) {
-      case Priority.HIGH:
+  // 使用useMemo缓存优先级类名计算
+  const priorityClass = useMemo(() => {
+    switch (todo.priority) {
+      case 'high':
         return 'priority-high'
-      case Priority.MEDIUM:
+      case 'medium':
         return 'priority-medium'
-      case Priority.LOW:
+      case 'low':
         return 'priority-low'
       default:
         return 'priority-medium'
     }
-  }
+  }, [todo.priority])
+
+  // 使用useMemo优化优先级文本计算
+  const priorityText = useMemo(() => {
+    switch (todo.priority) {
+      case 'high': return '高'
+      case 'medium': return '中'
+      case 'low': return '低'
+      default: return '中'
+    }
+  }, [todo.priority])
 
   return (
-    <div className={`todo-item ${todo.completed ? 'completed' : ''}`}>
+    <div className={`todo-item ${todo.completed ? 'completed' : ''} ${priorityClass}`}>
       {isEditing ? (
         <div className="todo-edit">
           <input
@@ -126,9 +138,8 @@ const TodoItem: React.FC<TodoItemProps> = ({
                 <p className={todo.completed ? 'completed-text' : ''}>{todo.description}</p>
               )}
               <div className="todo-meta">
-                <span className={`priority-badge ${getPriorityClass(todo.priority)}`}>
-                  {todo.priority === Priority.HIGH ? '高' : 
-                   todo.priority === Priority.MEDIUM ? '中' : '低'}优先级
+                <span className={`priority-badge ${priorityClass}`}>
+                  {priorityText}优先级
                 </span>
                 {(todo.start_time || todo.end_time) && (
                   <span className="time-info">
@@ -141,8 +152,20 @@ const TodoItem: React.FC<TodoItemProps> = ({
             </div>
           </div>
           <div className="todo-actions">
-            <button onClick={() => setIsEditing(true)} className="btn-edit">编辑</button>
-            <button onClick={() => onDelete(todo.id!)} className="btn-delete">删除</button>
+            <button
+              onClick={useCallback(() => setIsEditing(true), [])}
+              className="btn-edit"
+              aria-label={`编辑待办事项: ${todo.title}`}
+            >
+              编辑
+            </button>
+            <button
+              onClick={useCallback(() => onDelete(todo.id!), [onDelete, todo.id])}
+              className="btn-delete"
+              aria-label={`删除待办事项: ${todo.title}`}
+            >
+              删除
+            </button>
           </div>
         </>
       )}

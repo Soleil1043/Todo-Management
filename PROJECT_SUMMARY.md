@@ -32,7 +32,8 @@
 - ✅ **移动端适配** - 触摸友好的交互设计
 
 ### 🗂️ 数据模型设计
-- ✅ **TodoItem模型** - 完整的待办事项数据结构
+- ✅ **TodoSchema模型** - 完整的待办事项数据结构（Pydantic验证）
+- ✅ **TodoORM模型** - 数据库ORM映射（SQLAlchemy）
 - ✅ **优先级枚举** - 标准化的优先级定义
 - ✅ **时间字段支持** - 可选的开始和结束时间
 - ✅ **状态管理** - 完成状态跟踪
@@ -47,14 +48,14 @@ Todo-Management/
 │   ├── main.py                 # FastAPI应用入口和配置
 │   ├── requirements.txt        # Python依赖管理
 │   ├── models/                 # 数据模型定义
-│   │   └── model.py           # Pydantic模型和枚举
+│   │   └── schemas.py         # Pydantic模型和枚举
 │   ├── routers/                # API路由处理
 │   │   └── todos.py           # RESTful接口实现
 │   ├── services/               # 业务逻辑层
 │   │   └── todo_service.py    # 复杂的业务逻辑处理
 │   └── database/               # 数据存储层
 │       ├── database.py        # 数据库连接配置
-│       ├── models.py          # SQLAlchemy数据库模型
+│       ├── orm_models.py      # SQLAlchemy数据库模型
 │       ├── db_storage.py      # 数据库存储实现
 │       └── init_db.py         # 数据库初始化
 │

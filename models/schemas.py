@@ -8,8 +8,8 @@ class Priority(str, Enum):
     MEDIUM = "medium"
     LOW = "low"
 
-class TodoItem(BaseModel):
-    """待办事项模型"""
+class TodoSchema(BaseModel):
+    """待办事项模型 - 用于API数据验证和序列化"""
     id: Optional[int] = None
     title: str
     description: Optional[str] = None
@@ -50,7 +50,7 @@ class TodoItem(BaseModel):
         if data.get('id') is None:
             data.pop('id', None)
         return data
-
+    
     class Config:
         json_schema_extra = {
             "example": {

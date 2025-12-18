@@ -6,7 +6,7 @@
 [![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
 
 ## 📋 版本信息
-- **当前版本**: v2.2.0
+- **当前版本**: v2.2.2
 
 > **💡 版本管理说明**: 本文档为版本信息统一管理入口，其他文档中的版本信息均已移除。更新版本时只需修改此处的版本号即可。
 
@@ -65,14 +65,14 @@ Todo-Management/
 │   ├── main.py                 # FastAPI应用入口
 │   ├── requirements.txt        # Python依赖
 │   ├── models/                 # Pydantic数据模型
-│   │   └── model.py           # 待办事项数据模型
+│   │   └── schemas.py         # 待办事项数据模型
 │   ├── routers/                # API路由层
 │   │   └── todos.py           # 待办事项API路由
 │   ├── services/               # 业务逻辑层
 │   │   └── todo_service.py    # 待办事项业务逻辑
 │   └── database/               # 数据存储层
 │       ├── database.py        # 数据库连接配置
-│       ├── models.py          # SQLAlchemy数据库模型
+│       ├── orm_models.py      # SQLAlchemy数据库模型
 │       ├── db_storage.py      # 数据库存储实现
 │       ├── storage.py         # 存储抽象基类
 │       └── init_db.py         # 数据库初始化
@@ -86,7 +86,7 @@ Todo-Management/
 │   │       ├── main.tsx        # React应用入口
 │   │       ├── App.tsx         # 主应用组件
 │   │       ├── types/          # TypeScript类型定义
-│   │       │   └── todo.ts     # 待办事项类型
+│   │       │   └── todo.ts     # 待办事项Schema类型
 │   │       ├── services/       # API服务层
 │   │       │   └── api.ts      # 后端API调用
 │   │       ├── components/     # React组件
@@ -223,9 +223,9 @@ Content-Type: application/json
 
 ## 📊 数据模型
 
-### 待办事项 (TodoItem)
+### 待办事项 (TodoSchema)
 ```typescript
-interface TodoItem {
+interface TodoSchema {
   id?: number;                    // 唯一标识符
   title: string;                  // 标题（必填）
   description?: string;           // 描述（可选）
@@ -248,7 +248,7 @@ enum Priority {
 ### 数据库模型
 **后端使用SQLAlchemy ORM，包含以下字段：**
 
-**todo_items表：**
+**todo_items表（TodoORM）：**
 - `id`: 主键，自增
 - `title`: 标题（最大100字符）
 - `description`: 描述（最大500字符，可选）
@@ -260,7 +260,7 @@ enum Priority {
 - `updated_at`: 更新时间
 - `deleted`: 软删除标记
 
-**recycle_bin_items表：**
+**recycle_bin_items表（RecycleBinORM）：**
 - `id`: 主键，自增
 - `original_id`: 原始待办事项ID
 - `title`: 标题

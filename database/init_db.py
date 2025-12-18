@@ -1,5 +1,5 @@
 from database.database import engine
-from database.models import Base
+from database.orm_models import Base
 
 def init_db():
     """初始化数据库，创建所有表"""

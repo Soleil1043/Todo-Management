@@ -1,9 +1,9 @@
 import React from 'react'
-import { TodoItem } from '../types/todo'
+import { TodoSchema } from '../types/todo'
 import TodoItemComponent from './TodoItem'
 
 interface TodoListProps {
-  todos: TodoItem[]
+  todos: TodoSchema[]
   onToggleComplete: (id: number) => void
   onDelete: (id: number) => void
   onUpdate: (id: number, title: string, description: string, start_time?: string, end_time?: string) => void

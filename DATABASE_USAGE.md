@@ -8,7 +8,7 @@
 ### 核心组件
 - **抽象存储层** (`storage.py`) - 定义存储接口规范
 - **数据库存储实现** (`db_storage.py`) - SQLite数据库具体操作
-- **数据库模型** (`models.py`) - SQLAlchemy ORM模型定义
+- **数据库模型** (`orm_models.py`) - SQLAlchemy ORM模型定义
 - **数据库连接** (`database.py`) - 连接池和会话管理
 - **数据库初始化** (`init_db.py`) - 表结构创建和迁移
 
@@ -48,11 +48,11 @@
 ```python
 # 存储抽象基类定义标准接口
 class TodoStorage(ABC):
-    def get_all_todos(self) -> Dict[int, TodoItem]
-    def add_todo(self, todo: TodoItem) -> TodoItem
+    def get_all_todos(self) -> Dict[int, TodoSchema]
+    def add_todo(self, todo: TodoSchema) -> TodoSchema
     def update_todo(self, todo_id: int, **kwargs) -> bool
-    def remove_todo(self, todo_id: int) -> Optional[TodoItem]
-    def get_recycle_bin(self) -> Dict[int, TodoItem]
+    def remove_todo(self, todo_id: int) -> Optional[TodoSchema]
+    def get_recycle_bin(self) -> Dict[int, TodoSchema]
     # ... 其他方法
 ```
 
@@ -139,8 +139,8 @@ def create_todo(self, todo: TodoItem) -> TodoItem:
 ### 数据转换
 ```python
 # 数据库模型转Pydantic模型
-def _db_to_pydantic(self, db_todo: TodoItemDB) -> TodoItem:
-    return TodoItem(
+def _db_to_pydantic(self, db_todo: TodoORM) -> TodoSchema:
+    return TodoSchema(
         id=db_todo.id,
         title=db_todo.title,
         description=db_todo.description,
@@ -155,12 +155,12 @@ def _db_to_pydantic(self, db_todo: TodoItemDB) -> TodoItem:
 ```python
 # 实时统计信息
 def get_stats(self) -> dict:
-    total = self.db.query(TodoItemDB).filter(TodoItemDB.deleted == False).count()
-    completed = self.db.query(TodoItemDB).filter(
-        TodoItemDB.deleted == False,
-        TodoItemDB.completed == True
+    total = self.db.query(TodoORM).filter(TodoORM.deleted == False).count()
+    completed = self.db.query(TodoORM).filter(
+        TodoORM.deleted == False,
+        TodoORM.completed == True
     ).count()
-    recycle_bin = self.db.query(RecycleBinItemDB).count()
+    recycle_bin = self.db.query(RecycleBinORM).count()
     
     return {
         "total": total,
