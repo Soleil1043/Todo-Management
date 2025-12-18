@@ -2,6 +2,7 @@ import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import RecycleBin from './RecycleBin'
+import { ToastProvider } from './Toast'
 
 const mocks = vi.hoisted(() => ({
   getRecycleBin: vi.fn(),
@@ -43,13 +44,15 @@ describe('RecycleBin', () => {
     mocks.batchRestoreTodos.mockResolvedValue({ message: 'ok', restored_todos: restored })
 
     render(
-      <RecycleBin
-        isOpen={true}
-        onClose={() => {}}
-        onRestore={onRestore}
-        onPermanentlyDelete={() => {}}
-        onClearBin={() => {}}
-      />
+      <ToastProvider>
+        <RecycleBin
+          isOpen={true}
+          onClose={() => {}}
+          onRestore={onRestore}
+          onPermanentlyDelete={() => {}}
+          onClearBin={() => {}}
+        />
+      </ToastProvider>
     )
 
     await screen.findByText('t1')

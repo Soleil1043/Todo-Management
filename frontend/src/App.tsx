@@ -4,20 +4,27 @@ import TodoList from './components/TodoList'
 import { TodoSchema, TodoFormData, PriorityType } from './types/todo'
 import { todoApi, recordToArray, settingsApi } from './services/api'
 import Icon from './components/Icon'
+import ListToolbar, { FilterStatus, SortType } from './components/ListToolbar'
+import { useToast } from './components/Toast'
 import './App.css'
 
 // 代码分割 - 懒加载组件
 const RecycleBin = lazy(() => import('./components/RecycleBin'))
-const StyleGuide = lazy(() => import('./components/StyleGuide'))
 const AppearanceSettings = lazy(() => import('./components/AppearanceSettings'))
 
 function App() {
   const [todos, setTodos] = useState<TodoSchema[]>([])
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
   const [isRecycleBinOpen, setIsRecycleBinOpen] = useState(false)
-  const [isStyleGuideOpen, setIsStyleGuideOpen] = useState(false)
   const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  
+  // List Toolbar State
+  const [searchTerm, setSearchTerm] = useState('')
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('all')
+  const [sortBy, setSortBy] = useState<SortType>('updated')
+  const [hideCompleted, setHideCompleted] = useState(false)
+
+  const { showToast } = useToast()
 
   // 外观设置状态
   const [theme, setTheme] = useState<'light' | 'dark'>('light')
@@ -107,35 +114,34 @@ function App() {
   const loadTodos = useCallback(async () => {
     try {
       setLoading(true)
-      setError(null)
       const data = await todoApi.getTodos()
       // 使用工具函数转换数据格式
       const todoArray = recordToArray(data)
       setTodos(todoArray)
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '加载待办事项失败'
-      setError(errorMessage)
+      showToast(errorMessage, 'error')
       console.error('Error loading todos:', err)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [showToast])
 
   const handleAddTodo = useCallback(async (data: TodoFormData) => {
     try {
-      setError(null)
       const newTodo = await todoApi.createTodo({
         ...data,
         completed: false
       } as TodoSchema)
       // 使用函数式更新避免依赖todos状态
       setTodos(prevTodos => [...prevTodos, newTodo])
+      showToast('添加成功', 'success')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '添加待办事项失败'
-      setError(errorMessage)
+      showToast(errorMessage, 'error')
       console.error('Error adding todo:', err)
     }
-  }, [])
+  }, [showToast])
 
   const handleToggleComplete = useCallback(async (id: number) => {
     // 乐观更新：先更新 UI
@@ -162,27 +168,26 @@ function App() {
       )
       
       const errorMessage = err instanceof Error ? err.message : '更新状态失败'
-      setError(errorMessage)
+      showToast(errorMessage, 'error')
       console.error('Error toggling status:', err)
     }
-  }, [])
+  }, [showToast])
 
   const handleDeleteTodo = useCallback(async (id: number) => {
     try {
-      setError(null)
       await todoApi.deleteTodo(id)
       // 使用函数式更新
       setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id))
+      showToast('已移动到回收站', 'success')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '删除待办事项失败'
-      setError(errorMessage)
+      showToast(errorMessage, 'error')
       console.error('Error deleting todo:', err)
     }
-  }, [])
+  }, [showToast])
 
   const handleUpdateTodo = useCallback(async (id: number, title: string, description: string, priority: PriorityType, start_time?: string, end_time?: string) => {
     try {
-      setError(null)
       const updatedTodo = await todoApi.updateTodo(id, {
         title,
         description,
@@ -196,12 +201,60 @@ function App() {
           todo.id === id ? updatedTodo : todo
         )
       )
+      showToast('更新成功', 'success')
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : '更新待办事项失败'
-      setError(errorMessage)
+      showToast(errorMessage, 'error')
       console.error('Error updating todo:', err)
     }
-  }, [])
+  }, [showToast])
+
+  // Filter and Sort Logic
+  const filteredTodos = useMemo(() => {
+    let result = [...todos]
+
+    // Search
+    if (searchTerm) {
+      const lowerTerm = searchTerm.toLowerCase()
+      result = result.filter(
+        todo => 
+          todo.title.toLowerCase().includes(lowerTerm) || 
+          (todo.description && todo.description.toLowerCase().includes(lowerTerm))
+      )
+    }
+
+    // Status Filter
+    if (statusFilter === 'active') {
+      result = result.filter(todo => !todo.completed)
+    } else if (statusFilter === 'completed') {
+      result = result.filter(todo => todo.completed)
+    }
+
+    // Hide Completed (redundant with statusFilter but part of P0 req)
+    if (hideCompleted && statusFilter === 'all') {
+      result = result.filter(todo => !todo.completed)
+    }
+
+    // Sort
+    result.sort((a, b) => {
+      if (sortBy === 'priority') {
+        const priorityMap = { high: 3, medium: 2, low: 1 }
+        return priorityMap[b.priority] - priorityMap[a.priority]
+      }
+      if (sortBy === 'time') {
+        if (!a.start_time) return 1
+        if (!b.start_time) return -1
+        return a.start_time.localeCompare(b.start_time)
+      }
+      if (sortBy === 'updated') {
+        // Fallback to ID for "updated/newest" as proxy
+        return (b.id || 0) - (a.id || 0)
+      }
+      return 0
+    })
+
+    return result
+  }, [todos, searchTerm, statusFilter, hideCompleted, sortBy])
 
   // 使用useMemo优化计算性能
   const completedCount = useMemo(() =>
@@ -251,14 +304,6 @@ function App() {
             </button>
             <button
               className="btn-recycle-bin"
-              onClick={() => setIsStyleGuideOpen(true)}
-              aria-haspopup="dialog"
-              title="样式指南"
-            >
-              <Icon name="info" size={20} />
-            </button>
-            <button
-              className="btn-recycle-bin"
               onClick={() => setIsRecycleBinOpen(true)}
               aria-haspopup="dialog"
               title="回收站"
@@ -268,24 +313,6 @@ function App() {
           </div>
         </header>
 
-        {error && (
-          <div className="error-message" role="alert" aria-live="polite">
-            <div className="error-content">
-              <Icon name="info" size={20} />
-              <strong>操作失败：</strong>
-              {error}
-            </div>
-            <button
-              onClick={() => setError(null)}
-              className="btn-close-error"
-              aria-label="关闭错误消息"
-              type="button"
-            >
-              <Icon name="x" size={16} />
-            </button>
-          </div>
-        )}
-
         <main className="app-main">
           <section className="add-todo-section">
             <h2>添加待办</h2>
@@ -293,12 +320,26 @@ function App() {
           </section>
 
           <section className="todo-list-section">
-            <h2>待办列表</h2>
+            <div className="section-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
+              <h2 style={{ margin: 0 }}>待办列表</h2>
+            </div>
+            
+            <ListToolbar
+              searchTerm={searchTerm}
+              onSearchChange={setSearchTerm}
+              statusFilter={statusFilter}
+              onStatusChange={setStatusFilter}
+              sortBy={sortBy}
+              onSortChange={setSortBy}
+              hideCompleted={hideCompleted}
+              onHideCompletedChange={setHideCompleted}
+            />
+
             {loading ? (
               <div className="loading">加载中...</div>
             ) : (
               <TodoList
-                todos={todos}
+                todos={filteredTodos}
                 onToggleComplete={handleToggleComplete}
                 onDelete={handleDeleteTodo}
                 onUpdate={handleUpdateTodo}
@@ -308,7 +349,6 @@ function App() {
         </main>
 
         <Suspense fallback={<div className="loading">加载弹窗...</div>}>
-          <StyleGuide isOpen={isStyleGuideOpen} onClose={() => setIsStyleGuideOpen(false)} />
           <RecycleBin
             isOpen={isRecycleBinOpen}
             onClose={() => setIsRecycleBinOpen(false)}
@@ -331,7 +371,7 @@ function App() {
         </Suspense>
       </div>
     </div>
-    )
-  }
+  )
+}
 
 export default App

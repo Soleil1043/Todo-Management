@@ -14,6 +14,12 @@ export type IconName =
   | 'tag'
   | 'clock'
   | 'plus'
+  | 'search'
+  | 'check'
+  | 'alert-circle'
+  | 'upload'
+  | 'droplet'
+  | 'eye'
 
 type IconProps = {
   name: IconName
@@ -23,6 +29,38 @@ type IconProps = {
 }
 
 const paths: Record<IconName, React.ReactNode> = {
+  search: (
+    <>
+      <circle cx="11" cy="11" r="8"></circle>
+      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+    </>
+  ),
+  check: (
+    <polyline points="20 6 9 17 4 12"></polyline>
+  ),
+  'alert-circle': (
+    <>
+      <circle cx="12" cy="12" r="10"></circle>
+      <line x1="12" y1="8" x2="12" y2="12"></line>
+      <line x1="12" y1="16" x2="12.01" y2="16"></line>
+    </>
+  ),
+  upload: (
+    <>
+      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+      <polyline points="17 8 12 3 7 8"></polyline>
+      <line x1="12" y1="3" x2="12" y2="15"></line>
+    </>
+  ),
+  droplet: (
+    <path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"></path>
+  ),
+  eye: (
+    <>
+      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+      <circle cx="12" cy="12" r="3"></circle>
+    </>
+  ),
   trash: (
     <>
       <path d="M3 6h18" />
