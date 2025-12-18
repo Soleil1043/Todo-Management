@@ -138,15 +138,29 @@ function App() {
   }, [])
 
   const handleToggleComplete = useCallback(async (id: number) => {
+    // 乐观更新：先更新 UI
+    setTodos(prevTodos =>
+      prevTodos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    )
+
     try {
       const updatedTodo = await todoApi.toggleTodoStatus(id)
-      // 使用函数式更新
+      // API 成功后，使用服务器返回的最新数据确认更新（通常是一致的）
       setTodos(prevTodos =>
         prevTodos.map(todo =>
           todo.id === id ? updatedTodo : todo
         )
       )
     } catch (err) {
+      // 失败时回滚状态
+      setTodos(prevTodos =>
+        prevTodos.map(todo =>
+          todo.id === id ? { ...todo, completed: !todo.completed } : todo
+        )
+      )
+      
       const errorMessage = err instanceof Error ? err.message : '更新状态失败'
       setError(errorMessage)
       console.error('Error toggling status:', err)
@@ -231,42 +245,43 @@ function App() {
               className="btn-recycle-bin"
               onClick={() => setIsSettingsOpen(true)}
               aria-haspopup="dialog"
+              title="外观设置"
             >
-              <Icon name="settings" />
-              外观设置
+              <Icon name="settings" size={20} />
             </button>
             <button
               className="btn-recycle-bin"
               onClick={() => setIsStyleGuideOpen(true)}
               aria-haspopup="dialog"
+              title="样式指南"
             >
-              <Icon name="info" />
-              样式指南
+              <Icon name="info" size={20} />
             </button>
             <button
               className="btn-recycle-bin"
               onClick={() => setIsRecycleBinOpen(true)}
               aria-haspopup="dialog"
+              title="回收站"
             >
-              <Icon name="trash" />
-              回收站
+              <Icon name="trash" size={20} />
             </button>
           </div>
         </header>
 
         {error && (
           <div className="error-message" role="alert" aria-live="polite">
-            <div>
+            <div className="error-content">
+              <Icon name="info" size={20} />
               <strong>操作失败：</strong>
               {error}
             </div>
             <button
               onClick={() => setError(null)}
-              className="btn-close"
+              className="btn-close-error"
               aria-label="关闭错误消息"
               type="button"
             >
-              <Icon name="x" />
+              <Icon name="x" size={16} />
             </button>
           </div>
         )}

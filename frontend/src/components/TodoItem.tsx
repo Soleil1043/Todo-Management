@@ -113,6 +113,7 @@ const TodoItem: React.FC<TodoItemProps> = ({
             placeholder="标题"
             maxLength={100}
             aria-label="编辑标题"
+            autoFocus
           />
           <textarea
             value={editDescription}
@@ -122,12 +123,12 @@ const TodoItem: React.FC<TodoItemProps> = ({
             }}
             className="edit-textarea"
             placeholder="描述（可选）"
-            rows={2}
+            rows={3}
             maxLength={500}
             aria-label="编辑描述"
           />
-          <div className="edit-row">
-            <div className="time-selector">
+          <div className="form-row">
+            <div className="form-group">
               <label className="form-label" htmlFor={`edit-priority-${todo.id}`}>
                 优先级
               </label>
@@ -160,17 +161,17 @@ const TodoItem: React.FC<TodoItemProps> = ({
             />
           </div>
           <div className="edit-actions">
-            <button type="button" onClick={handleSave} className="btn-save">
-              保存
-            </button>
             <button type="button" onClick={handleCancel} className="btn-cancel">
               取消
+            </button>
+            <button type="button" onClick={handleSave} className="btn-save">
+              保存
             </button>
           </div>
         </div>
       ) : (
         <>
-          <div className="todo-content">
+          <div className="todo-checkbox-container">
             <input
               type="checkbox"
               checked={todo.completed}
@@ -178,43 +179,50 @@ const TodoItem: React.FC<TodoItemProps> = ({
               className="todo-checkbox"
               aria-label={`${todo.completed ? '取消完成' : '标记完成'}：${todo.title}`}
             />
-            <div className="todo-text">
-              <h3 className={todo.completed ? 'completed-text' : ''}>{todo.title}</h3>
-              {todo.description && (
-                <p className={todo.completed ? 'completed-text' : ''}>{todo.description}</p>
-              )}
-              <div className="todo-meta">
-                <span className={`priority-badge ${priorityClass}`}>
-                  {priorityText}优先级
-                </span>
-                {(todo.start_time || todo.end_time) && (
-                  <span className="time-info">
-                    {todo.start_time && `开始: ${todo.start_time}`}
-                    {todo.start_time && todo.end_time && ' | '}
-                    {todo.end_time && `结束: ${todo.end_time}`}
-                  </span>
-                )}
+          </div>
+          
+          <div className="todo-content">
+            <div className="todo-header">
+              <h3 className="todo-title">{todo.title}</h3>
+            </div>
+            
+            {todo.description && (
+              <p className="todo-description">{todo.description}</p>
+            )}
+            
+            <div className="todo-meta">
+              <div className="meta-item">
+                <Icon name="tag" size={14} />
+                <span>{priorityText}优先级</span>
               </div>
+              
+              {(todo.start_time || todo.end_time) && (
+                <div className="meta-item">
+                  <Icon name="clock" size={14} />
+                  <span>
+                    {todo.start_time && `${todo.start_time}`}
+                    {todo.start_time && todo.end_time && ' - '}
+                    {todo.end_time && `${todo.end_time}`}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
+
           <div className="todo-actions">
-            <button
-              type="button"
+            <button 
+              className="btn-edit" 
               onClick={() => setIsEditing(true)}
-              className="btn-edit"
-              aria-label={`编辑待办事项: ${todo.title}`}
+              title="编辑"
             >
-              <Icon name="edit" />
-              编辑
+              <Icon name="edit" size={18} />
             </button>
-            <button
-              type="button"
+            <button 
+              className="btn-delete" 
               onClick={() => onDelete(todo.id!)}
-              className="btn-delete"
-              aria-label={`删除待办事项: ${todo.title}`}
+              title="删除"
             >
-              <Icon name="delete" />
-              删除
+              <Icon name="trash" size={18} />
             </button>
           </div>
         </>

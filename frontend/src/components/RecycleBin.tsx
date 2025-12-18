@@ -142,16 +142,16 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
   if (!isOpen) return null
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div className="modal-overlay" role="presentation" onMouseDown={onClose}>
       <section
-        className="modal"
+        className="modal-content"
         role="dialog"
         aria-modal="true"
         aria-label="回收站"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <header className="modal-header">
-          <h2>回收站</h2>
+          <h2 className="modal-title">回收站</h2>
           <button
             ref={closeButtonRef}
             className="btn-close"
@@ -159,7 +159,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
             aria-label="关闭回收站"
             type="button"
           >
-            <Icon name="x" />
+            <Icon name="x" size={20} />
           </button>
         </header>
 
@@ -170,107 +170,116 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
             </div>
           ) : null}
 
-          <div className="recycle-bin-actions" style={{ marginTop: actionError ? 12 : 0 }}>
-            <button
-              className="btn-restore-all"
-              onClick={requestBatchRestore}
-              disabled={recycledTodos.length === 0 || loading}
-              type="button"
-            >
-              <Icon name="restore" />
-              一键恢复
-            </button>
-            <button
-              className="btn-clear"
-              onClick={requestClearBin}
-              disabled={recycledTodos.length === 0 || loading}
-              type="button"
-            >
-              <Icon name="delete" />
-              清空
-            </button>
+          <div className="recycle-bin-list">
+            {loading ? (
+              <div className="loading">加载中...</div>
+            ) : recycledTodos.length === 0 ? (
+              <div className="empty-state">
+                <p>回收站为空</p>
+              </div>
+            ) : (
+              recycledTodos.map(todo => (
+                <div key={todo.id} className="todo-item" style={{ marginBottom: 12 }}>
+                  <div className="todo-content">
+                    <div className="todo-header">
+                      <h4 className="todo-title">{todo.title}</h4>
+                    </div>
+                    {todo.description && <p className="todo-description">{todo.description}</p>}
+                    <div className="todo-meta">
+                      <div className="meta-item">
+                          <Icon name="tag" size={14} />
+                          <span className={`priority-badge priority-${todo.priority}`}>
+                          {todo.priority === 'high' ? '高' :
+                          todo.priority === 'medium' ? '中' : '低'}优先级
+                          </span>
+                      </div>
+                      {(todo.start_time || todo.end_time) && (
+                        <div className="meta-item">
+                          <Icon name="clock" size={14} />
+                          <span>
+                              {todo.start_time && `${todo.start_time}`}
+                              {todo.start_time && todo.end_time && ' - '}
+                              {todo.end_time && `${todo.end_time}`}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  <div className="todo-actions">
+                    <button
+                      className="btn-restore"
+                      onClick={() => handleRestore(todo)}
+                      disabled={loading}
+                      type="button"
+                      title="恢复"
+                    >
+                      <Icon name="restore" size={18} />
+                    </button>
+                    <button
+                      className="btn-delete-permanent"
+                      onClick={() => requestPermanentDelete(todo.id!)}
+                      disabled={loading}
+                      type="button"
+                      title="永久删除"
+                    >
+                      <Icon name="trash" size={18} />
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
 
-        <div className="recycle-bin-list">
-          {loading ? (
-            <div className="loading">加载中...</div>
-          ) : recycledTodos.length === 0 ? (
-            <div className="empty-state">
-              <p>回收站为空</p>
-            </div>
-          ) : (
-            recycledTodos.map(todo => (
-              <div key={todo.id} className="recycle-bin-item">
-                <div className="item-content">
-                  <h4>{todo.title}</h4>
-                  {todo.description && <p>{todo.description}</p>}
-                  <div className="item-meta">
-                    <span className={`priority-badge priority-${todo.priority}`}>
-                      {todo.priority === 'high' ? '高' :
-                       todo.priority === 'medium' ? '中' : '低'}优先级
-                    </span>
-                    {(todo.start_time || todo.end_time) && (
-                      <span className="time-info">
-                        {todo.start_time && `开始: ${todo.start_time}`}
-                        {todo.start_time && todo.end_time && ' | '}
-                        {todo.end_time && `结束: ${todo.end_time}`}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                <div className="item-actions">
-                  <button
-                    className="btn-restore"
-                    onClick={() => handleRestore(todo)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    <Icon name="restore" />
-                    恢复
-                  </button>
-                  <button
-                    className="btn-delete-permanent"
-                    onClick={() => requestPermanentDelete(todo.id!)}
-                    disabled={loading}
-                    type="button"
-                  >
-                    <Icon name="delete" />
-                    永久删除
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+        <footer className="modal-footer">
+          <button
+            className="btn-restore-all"
+            onClick={requestBatchRestore}
+            disabled={recycledTodos.length === 0 || loading}
+            type="button"
+          >
+            <Icon name="restore" size={16} />
+            一键恢复
+          </button>
+          <button
+            className="btn-clear"
+            onClick={requestClearBin}
+            disabled={recycledTodos.length === 0 || loading}
+            type="button"
+          >
+            <Icon name="trash" size={16} />
+            清空
+          </button>
+        </footer>
 
         {confirmAction ? (
           <div
-            className="modal-backdrop"
+            className="modal-overlay"
             role="presentation"
             onMouseDown={() => setConfirmAction(null)}
             style={{ zIndex: 1100 }}
           >
             <section
-              className="modal modal--sm"
+              className="modal-content"
+              style={{ maxWidth: 400 }}
               role="dialog"
               aria-modal="true"
               aria-label="二次确认"
               onMouseDown={(e) => e.stopPropagation()}
             >
               <header className="modal-header">
-                <h2>确认操作</h2>
+                <h2 className="modal-title">确认操作</h2>
                 <button
                   className="btn-close"
                   onClick={() => setConfirmAction(null)}
                   aria-label="关闭确认弹窗"
                   type="button"
                 >
-                  <Icon name="x" />
+                  <Icon name="x" size={20} />
                 </button>
               </header>
               <div className="modal-body">
-                <p style={{ margin: 0, color: 'var(--color-muted)', fontSize: 13 }}>
+                <p style={{ margin: 0, color: 'var(--color-text-secondary)', fontSize: 14 }}>
                   {confirmAction.kind === 'permanentDelete'
                     ? '确定要永久删除该待办吗？此操作不可恢复。'
                     : confirmAction.kind === 'clearBin'

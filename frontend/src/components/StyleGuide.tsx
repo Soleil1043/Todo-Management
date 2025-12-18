@@ -29,16 +29,16 @@ export default function StyleGuide({ isOpen, onClose }: StyleGuideProps) {
   if (!isOpen) return null
 
   return (
-    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+    <div className="modal-overlay" role="presentation" onMouseDown={onClose}>
       <section
-        className="modal"
+        className="modal-content"
         role="dialog"
         aria-modal="true"
         aria-label="设计系统与样式指南"
         onMouseDown={(e) => e.stopPropagation()}
       >
         <header className="modal-header">
-          <h2>设计系统</h2>
+          <h2 className="modal-title">设计系统</h2>
           <button
             ref={closeButtonRef}
             type="button"
@@ -46,7 +46,7 @@ export default function StyleGuide({ isOpen, onClose }: StyleGuideProps) {
             onClick={onClose}
             aria-label="关闭设计系统"
           >
-            <Icon name="x" />
+            <Icon name="x" size={20} />
           </button>
         </header>
 
@@ -97,20 +97,15 @@ export default function StyleGuide({ isOpen, onClose }: StyleGuideProps) {
               <h3 className="guide-title">组件示例</h3>
               <div className="guide-actions">
                 <button type="button" className="btn-edit">
-                  <Icon name="edit" />
-                  主要按钮
-                </button>
-                <button type="button" className="btn-recycle-bin">
-                  次要按钮
+                  <Icon name="edit" size={18} />
                 </button>
                 <button type="button" className="btn-delete">
-                  <Icon name="delete" />
-                  危险操作
+                  <Icon name="trash" size={18} />
                 </button>
-              </div>
-              <div className="guide-surface">
-                <div className="priority-badge priority-medium">中优先级</div>
-                <div className="time-info">开始: 09:00 | 结束: 10:00</div>
+                <button type="button" className="btn-submit">
+                  <Icon name="plus" size={16} />
+                  Primary
+                </button>
               </div>
             </section>
           </div>
