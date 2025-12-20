@@ -1,0 +1,85 @@
+/* Mobile Responsiveness */
+@media (max-width: 768px) {
+  .app-sidebar {
+    position: fixed;
+    z-index: 50;
+    transform: translateX(-100%);
+  }
+  
+  .app-sidebar.open {
+    transform: translateX(0);
+  }
+  
+  .main-header {
+    padding: 0 var(--space-4);
+    height: 64px;
+  }
+  
+  .main-content-scroll {
+    padding: 0 var(--space-4) var(--space-4) var(--space-4);
+  }
+  
+  .dashboard-grid {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .todo-actions {
+    opacity: 1; /* Always show actions on mobile */
+    flex-direction: row;
+  }
+  
+  .quadrant-layout {
+    flex-direction: column;
+    overflow-y: auto;
+  }
+  
+  .unassigned-stack, .priority-list {
+    width: 100%;
+    height: 300px;
+    flex-shrink: 0;
+  }
+
+  .quadrant-card {
+    height: 400px;
+    flex-shrink: 0;
+  }
+}
+
+/* Small Mobile Devices */
+@media (max-width: 640px) {
+  .page-title {
+    font-size: var(--text-xl);
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-content {
+    max-height: 95vh;
+  }
+
+  .modal-body {
+    padding: var(--space-4);
+  }
+
+  .unassigned-stack, .priority-list {
+    height: 250px;
+  }
+}
+
+/* Large Screens */
+@media (min-width: 1280px) {
+  .dashboard-grid {
+    max-width: 1400px;
+  }
+
+  .unassigned-stack {
+    width: 300px;
+  }
+
+  .priority-list {
+    width: 350px;
+  }
+}

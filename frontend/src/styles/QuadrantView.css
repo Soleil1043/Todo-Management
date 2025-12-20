@@ -1,0 +1,12 @@
+/* Core Layout for Quadrant View */
+.new-quadrant-view {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.quadrant-layout {
+  display: flex;
+  height: 100%;
+  gap: var(--space-4);
+}

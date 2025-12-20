@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react'
+import React, { createContext, useContext, useState, useCallback, useMemo } from 'react'
 import Icon from './Icon'
 
 export type ToastType = 'success' | 'error' | 'info'
@@ -47,7 +47,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ showToast, hideToast }}>
       {children}
       <div className="toast-container">
-        {toasts.map((toast) => (
+        {useMemo(() => toasts.map((toast) => (
           <div key={toast.id} className={`toast toast-${toast.type} slide-in`}>
             <div className="toast-icon">
               {toast.type === 'success' && <Icon name="check" size={20} />}
@@ -63,7 +63,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               <Icon name="x" size={16} />
             </button>
           </div>
-        ))}
+        )), [toasts, hideToast])}
       </div>
     </ToastContext.Provider>
   )

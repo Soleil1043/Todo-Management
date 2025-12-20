@@ -7,30 +7,54 @@
 :root {
   color-scheme: light;
 
-  /* Indigo 调色板 - 更现代的主色 */
-  --color-primary-hue: 239;
-  --color-primary-sat: 84%;
-  --color-primary-light: 67%;
+  /* 四象限管理法专用色彩系统 */
+  --color-urgent-important: #f53f3f;      /* L1: 紧急重要 - 红色 */
+  --color-important: #3491fa;             /* L2: 重要不紧急 - 蓝色 */
+  --color-urgent: #ff7d00;                /* L3: 紧急不重要 - 橙色 */
+  --color-normal: #00b42a;                /* L4: 不紧急不重要 - 绿色 */
   
-  --color-bg: hsl(220 20% 97%);
+  /* 中性色系统 - 现代简约 */
+  --color-neutral-1: #ffffff;
+  --color-neutral-2: #f7f8fa;
+  --color-neutral-3: #f2f3f5;
+  --color-neutral-4: #e5e6eb;
+  --color-neutral-5: #c9cdd4;
+  --color-neutral-6: #a9aeb8;
+  --color-neutral-7: #86909c;
+  --color-neutral-8: #6b7785;
+  --color-neutral-9: #4e5969;
+  --color-neutral-10: #272e3b;
   
+  /* 语义色 */
+  --color-success: #00b42a;
+  --color-warning: #ff7d00;
+  --color-danger: #f53f3f;
+  --color-info: #3491fa;
+  
+  /* 文字颜色 */
+  --color-text: var(--color-neutral-10);
+  --color-text-secondary: var(--color-neutral-8);
+  --color-text-tertiary: var(--color-neutral-6);
+  --color-text-disabled: var(--color-neutral-5);
+  
+  /* 背景色 */
+  --color-bg: var(--color-neutral-2);
+  --color-bg-secondary: var(--color-neutral-3);
+  --color-bg-tertiary: var(--color-neutral-4);
+  
+  /* 边框色 */
+  --color-border: var(--color-neutral-4);
+  --color-border-secondary: var(--color-neutral-3);
+  
+  /* 主要交互色 - 使用L2蓝色作为primary */
+  --color-primary: var(--color-important);
+  --color-primary-hover: #165dff;
+  --color-primary-rgb: 52, 145, 250;
+  
+  /* 表面色 - 玻璃拟态效果 */
   --color-surface-hsl: 0 0% 100%;
-  --surface-opacity: 0.95; /* 略微透明，增加质感 */
+  --surface-opacity: 0.85;
   --color-surface: hsl(var(--color-surface-hsl) / var(--surface-opacity));
-  
-  --color-text: hsl(222 47% 11%);
-  --color-text-secondary: hsl(215 16% 47%);
-  --color-muted: hsl(215 16% 47%);
-  --color-border: hsl(214 32% 91%);
-
-  --color-primary: hsl(var(--color-primary-hue) var(--color-primary-sat) var(--color-primary-light));
-  --color-primary-hover: hsl(var(--color-primary-hue) var(--color-primary-sat) 60%);
-  --color-primary-rgb: 99 102 241; /* Indigo-500 */
-  
-  --color-danger: hsl(348 100% 60%);
-  --color-danger-rgb: 239 68 68;
-  
-  --color-success: hsl(142 76% 36%);
   
   /* 间距系统 - 保持不变，但增加一些 */
   --space-1: 4px;
@@ -67,32 +91,44 @@
 
 [data-theme='dark'] {
   color-scheme: dark;
-
-  --color-bg: hsl(222 47% 11%);
   
-  --color-surface-hsl: 217 33% 17%;
-  --color-surface: hsl(var(--color-surface-hsl) / var(--surface-opacity));
+  /* 暗色主题色彩调整 - 提高对比度和清晰度 */
+  --color-text: #f9fafb;
+  --color-text-secondary: #d1d5db;
+  --color-text-tertiary: #9ca3af;
+  --color-text-disabled: #6b7280;
   
-  --color-text: hsl(210 40% 98%);
-  --color-text-secondary: hsl(215 20% 65%);
-  --color-muted: hsl(215 20% 65%);
-  --color-border: hsl(217 33% 25%);
-
-  --color-primary: hsl(239 84% 75%); /* Dark mode brighter primary */
-  --color-primary-hover: hsl(239 84% 70%);
-  --color-primary-rgb: 129 140 248;
-
-  --color-danger: hsl(348 100% 66%);
-  --color-danger-rgb: 248 113 113;
+  --color-bg: #030712;
+  --color-bg-secondary: #111827;
+  --color-bg-tertiary: #1f2937;
+  
+  --color-border: #374151;
+  --color-border-secondary: #1f2937;
+  
+  --color-surface-hsl: 220 15% 10%;
+  
+  /* 四象限色彩在暗色主题下的调整 - 降低饱和度，提高亮度 */
+  --color-urgent-important: #ff8787;
+  --color-important: #74c0fc;
+  --color-urgent: #ffc078;
+  --color-normal: #8ce99a;
+  --color-danger: #ff8787;
+  --color-success: #8ce99a;
+  --color-warning: #ffc078;
+  --color-info: #74c0fc;
 
   --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.5);
-  --shadow-md: 0 10px 18px rgba(0, 0, 0, 0.6);
-  --shadow-lg: 0 20px 34px rgba(0, 0, 0, 0.7);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.7);
 }
 
 html,
 body {
   height: 100%;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
 body {
@@ -109,6 +145,20 @@ body {
   line-height: 1.5;
   text-rendering: optimizeLegibility;
   transition: background-color var(--motion-duration) var(--motion-ease), color var(--motion-duration) var(--motion-ease);
+  min-height: 100vh;
+  min-width: 100vw;
+}
+
+[data-theme='dark'] body {
+  -webkit-font-smoothing: subpixel-antialiased; /* Better clarity for light text on dark bg in some browsers */
+}
+
+body.has-wallpaper {
+  background-color: transparent !important;
+}
+
+body.has-wallpaper #root {
+  background-color: transparent !important;
 }
 
 code {

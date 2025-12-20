@@ -4,26 +4,22 @@ export interface TodoSchema {
   title: string;
   description?: string;
   completed: boolean;
-  priority: PriorityType;
+  future_score?: number;
+  urgency_score?: number;
+  final_priority?: number;
   start_time?: string;
   end_time?: string;
+  created_at?: string;
+  updated_at?: string;
 }
-
-// 优先级类型
-export type PriorityType = 'high' | 'medium' | 'low';
-
-// 优先级枚举
-export const Priority = {
-  HIGH: 'high' as PriorityType,
-  MEDIUM: 'medium' as PriorityType,
-  LOW: 'low' as PriorityType
-} as const;
 
 // 表单数据接口
 export interface TodoFormData {
   title: string;
   description?: string;
-  priority: PriorityType;
+  future_score?: number;
+  urgency_score?: number;
+  final_priority?: number;
   start_time?: string;
   end_time?: string;
 }
@@ -38,7 +34,6 @@ export interface TodoStats {
 
 // 待办事项过滤选项
 export interface TodoFilterOptions {
-  priority?: PriorityType;
   completed?: boolean;
   hasTimeRange?: boolean;
 }
@@ -129,23 +124,23 @@ export const minutesToTime = (minutes: number): string => {
   return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
 };
 
-// 优先级排序函数
+// 四象限优先级排序函数
 export const sortTodosByPriority = (todos: TodoSchema[]): TodoSchema[] => {
-  const priorityOrder = { high: 3, medium: 2, low: 1 };
   return [...todos].sort((a, b) => {
-    const priorityA = priorityOrder[a.priority] || 0;
-    const priorityB = priorityOrder[b.priority] || 0;
-    return priorityB - priorityA; // 高优先级在前
+    // 首先按完成状态排序（未完成的在前）
+    if (a.completed !== b.completed) {
+      return a.completed ? 1 : -1;
+    }
+    // 然后按最终优先级排序（优先级高的在前）
+    const priorityA = a.final_priority || 100;
+    const priorityB = b.final_priority || 100;
+    return priorityB - priorityA;
   });
 };
 
 // 过滤函数
 export const filterTodos = (todos: TodoSchema[], filters: TodoFilterOptions): TodoSchema[] => {
   return todos.filter(todo => {
-    if (filters.priority && todo.priority !== filters.priority) {
-      return false;
-    }
-    
     if (filters.completed !== undefined && todo.completed !== filters.completed) {
       return false;
     }

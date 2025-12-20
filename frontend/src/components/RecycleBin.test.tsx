@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import RecycleBin from './RecycleBin'
 import { ToastProvider } from './Toast'
+import { LoadingProvider } from '../contexts/LoadingContext'
 
 const mocks = vi.hoisted(() => ({
   getRecycleBin: vi.fn(),
@@ -36,23 +37,25 @@ describe('RecycleBin', () => {
   it('restores all todos from recycle bin', async () => {
     const onRestore = vi.fn()
 
-    const todo1 = { id: 1, title: 't1', description: '', completed: false, priority: 'high' as const }
-    const todo2 = { id: 2, title: 't2', description: '', completed: false, priority: 'low' as const }
+    const todo1 = { id: 1, title: 't1', description: '', completed: false, urgency_score: 1, future_score: 1 }
+    const todo2 = { id: 2, title: 't2', description: '', completed: false, urgency_score: 0, future_score: 0 }
     const restored = [todo1, todo2]
 
     mocks.getRecycleBin.mockResolvedValue({ 1: todo1, 2: todo2 })
     mocks.batchRestoreTodos.mockResolvedValue({ message: 'ok', restored_todos: restored })
 
     render(
-      <ToastProvider>
-        <RecycleBin
-          isOpen={true}
-          onClose={() => {}}
-          onRestore={onRestore}
-          onPermanentlyDelete={() => {}}
-          onClearBin={() => {}}
-        />
-      </ToastProvider>
+      <LoadingProvider>
+        <ToastProvider>
+          <RecycleBin
+            isOpen={true}
+            onClose={() => {}}
+            onRestore={onRestore}
+            onPermanentlyDelete={() => {}}
+            onClearBin={() => {}}
+          />
+        </ToastProvider>
+      </LoadingProvider>
     )
 
     await screen.findByText('t1')
@@ -71,6 +74,6 @@ describe('RecycleBin', () => {
       expect(onRestore).toHaveBeenCalledTimes(2)
     })
 
-    await screen.findByText('回收站为空')
+    await screen.findByText('垃圾桶为空')
   })
 })

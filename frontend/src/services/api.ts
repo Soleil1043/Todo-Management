@@ -1,14 +1,11 @@
 import axios, { AxiosInstance, AxiosError } from 'axios';
-import { TodoSchema } from '../types/todo';
+import { TodoSchema, TodoStats } from '../types/todo';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '/api';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000/api';
 
 // 创建API实例
 const api: AxiosInstance = axios.create({
   baseURL: API_BASE_URL,
-  headers: {
-    'Content-Type': 'application/json',
-  },
   timeout: 10000, // 添加超时设置
 });
 
@@ -71,7 +68,7 @@ export const todoApi = {
   },
 
   // 更新待办事项
-  updateTodo: async (id: number, todo: Partial<Omit<TodoSchema, 'id'>>): Promise<TodoSchema> => {
+  updateTodo: async (id: number, todo: Partial<Omit<TodoSchema, 'id'>> & { operation_source?: string }): Promise<TodoSchema> => {
     try {
       // 数据验证
       if (todo.title !== undefined) {
@@ -176,19 +173,9 @@ export const todoApi = {
   },
 
   // 获取统计信息
-  getStats: async (): Promise<{
-    total: number;
-    completed: number;
-    pending: number;
-    recycle_bin: number;
-  }> => {
+  getStats: async (): Promise<TodoStats> => {
     try {
-      const response = await api.get<{
-        total: number;
-        completed: number;
-        pending: number;
-        recycle_bin: number;
-      }>('/stats');
+      const response = await api.get<TodoStats>('/stats');
       return response.data;
     } catch (error) {
       console.error('获取统计信息失败:', error);
@@ -219,9 +206,7 @@ export const settingsApi = {
       formData.append('file', file);
       
       const response = await api.post<{ message: string }>('/settings/wallpaper', formData, {
-        headers: {
-          'Content-Type': 'multipart/form-data',
-        },
+        timeout: 60000,
       });
       return response.data;
     } catch (error) {

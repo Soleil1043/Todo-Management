@@ -3,6 +3,7 @@ import Icon from './Icon'
 import { settingsApi } from '../services/api'
 import Modal from './Modal'
 import { useToast } from './Toast'
+import LazyImage from './LazyImage'
 
 interface AppearanceSettingsProps {
   isOpen: boolean
@@ -10,11 +11,15 @@ interface AppearanceSettingsProps {
   theme: 'light' | 'dark'
   onThemeChange: (theme: 'light' | 'dark') => void
   bgImage: string | null
-  onBgImageChange: () => void
+  onBgImageChange: (isNewUpload?: boolean) => void
   bgOpacity: number
   onBgOpacityChange: (opacity: number) => void
   bgBlur: number
   onBgBlurChange: (blur: number) => void
+  spotlightType: 'glow' | 'flow' | 'focus' | 'none'
+  onSpotlightTypeChange: (type: 'glow' | 'flow' | 'focus' | 'none') => void
+  autoTrash: boolean
+  onAutoTrashChange: (enabled: boolean) => void
 }
 
 const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
@@ -28,6 +33,10 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
   onBgOpacityChange,
   bgBlur,
   onBgBlurChange,
+  spotlightType,
+  onSpotlightTypeChange,
+  autoTrash,
+  onAutoTrashChange,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
@@ -104,6 +113,15 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
           自定义壁纸
         </div>
         <div className="wallpaper-settings">
+          {bgImage && (
+            <div className="wallpaper-preview">
+              <LazyImage 
+                src={bgImage} 
+                alt="Wallpaper Preview" 
+                className="preview-img"
+              />
+            </div>
+          )}
           <input
             type="file"
             ref={fileInputRef}
@@ -170,6 +188,63 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
           />
           <span className="range-value">{bgBlur}%</span>
         </div>
+      </div>
+
+      <div className="settings-group">
+        <div className="settings-title">
+          <Icon name="zap" size={18} />
+          聚光灯
+        </div>
+        <div className="spotlight-toggle">
+          <button
+            className={`theme-btn ${spotlightType === 'none' ? 'active' : ''}`}
+            onClick={() => onSpotlightTypeChange('none')}
+          >
+            无效果
+          </button>
+          <button
+            className={`theme-btn ${spotlightType === 'glow' ? 'active' : ''}`}
+            onClick={() => onSpotlightTypeChange('glow')}
+          >
+            呼吸灯
+          </button>
+          <button
+            className={`theme-btn ${spotlightType === 'flow' ? 'active' : ''}`}
+            onClick={() => onSpotlightTypeChange('flow')}
+          >
+            流光溢彩
+          </button>
+          <button
+            className={`theme-btn ${spotlightType === 'focus' ? 'active' : ''}`}
+            onClick={() => onSpotlightTypeChange('focus')}
+          >
+            聚焦
+          </button>
+        </div>
+      </div>
+
+      <div className="settings-group">
+        <div className="settings-title">
+          <Icon name="check-circle" size={18} />
+          完成行为
+        </div>
+        <div className="spotlight-toggle">
+          <button
+            className={`theme-btn ${!autoTrash ? 'active' : ''}`}
+            onClick={() => onAutoTrashChange(false)}
+          >
+            保留在列表
+          </button>
+          <button
+            className={`theme-btn ${autoTrash ? 'active' : ''}`}
+            onClick={() => onAutoTrashChange(true)}
+          >
+            移入回收站
+          </button>
+        </div>
+        <p className="settings-hint" style={{ marginTop: '8px' }}>
+          待办事项完成后是否自动移动到回收站
+        </p>
       </div>
     </Modal>
   )

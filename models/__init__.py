@@ -1,3 +1,3 @@
-from .schemas import TodoSchema, Priority
+from .schemas import TodoSchema
 
 __all__ = ['TodoSchema', 'Priority']

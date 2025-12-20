@@ -20,7 +20,7 @@ class SettingService:
     def get_wallpaper(self) -> Optional[Tuple[bytes, str]]:
         setting = self.db.query(SystemSettingORM).filter(SystemSettingORM.key == "wallpaper").first()
         if setting and setting.blob_value:
-            return setting.blob_value, setting.content_type
+            return setting.blob_value, setting.content_type or "image/jpeg"
         return None
 
     def delete_wallpaper(self):

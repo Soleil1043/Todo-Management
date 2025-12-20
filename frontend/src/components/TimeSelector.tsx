@@ -1,4 +1,5 @@
-import React, { useMemo, useCallback, useId } from 'react'
+import React, { useMemo, useCallback, useId, useState, useRef, useEffect } from 'react'
+import '../styles/TimeSelector.css'
 
 interface TimeSelectorProps {
   label: string
@@ -11,31 +12,8 @@ interface TimeSelectorProps {
   id?: string
 }
 
-// 使用useMemo缓存时间选项生成，避免重复计算
-const useTimeOptions = (minTime?: string, maxTime?: string) => {
-  return useMemo(() => {
-    const options = []
-    const startHour = minTime ? parseInt(minTime.split(':')[0]) : 0
-    const endHour = maxTime ? parseInt(maxTime.split(':')[0]) : 23
-    const startMinute = minTime ? parseInt(minTime.split(':')[1]) : 0
-    const endMinute = maxTime ? parseInt(maxTime.split(':')[1]) : 59
-    
-    for (let hour = startHour; hour <= endHour; hour++) {
-      const minuteStart = hour === startHour ? startMinute : 0
-      const minuteEnd = hour === endHour ? endMinute : 59
-      
-      for (let minute = minuteStart; minute <= minuteEnd; minute += 30) {
-        const time = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        
-        // 如果时间选项在指定范围内，添加到选项列表
-        if ((!minTime || time >= minTime) && (!maxTime || time <= maxTime)) {
-          options.push(time)
-        }
-      }
-    }
-    return options
-  }, [minTime, maxTime])
-}
+const HOURS = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, '0'))
+const MINUTES = ['00', '30'] // Maintaining the 30-minute interval from original code
 
 const TimeSelector: React.FC<TimeSelectorProps> = ({
   label,
@@ -47,45 +25,165 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   maxTime,
   id
 }) => {
-  const timeOptions = useTimeOptions(minTime, maxTime)
+  const [isOpen, setIsOpen] = useState(false)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const hourColumnRef = useRef<HTMLDivElement>(null)
+  const minuteColumnRef = useRef<HTMLDivElement>(null)
   const generatedId = useId()
   const selectId = id || `time-selector-${generatedId}`
 
-  // 使用useCallback优化事件处理函数
-  const handleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    onChange(e.target.value)
-  }, [onChange])
+  // Parse current value
+  const [currentHour, currentMinute] = useMemo(() => {
+    if (!value) return ['', '']
+    return value.split(':')
+  }, [value])
 
-  // 验证当前值是否在有效范围内
-  const isValidValue = useMemo(() => {
-    if (!value) return true
-    return timeOptions.includes(value)
-  }, [value, timeOptions])
+  // Toggle dropdown
+  const toggleDropdown = useCallback(() => {
+    if (!disabled) setIsOpen(prev => !prev)
+  }, [disabled])
 
-  return (
-    <div className="time-selector">
-      <label className="form-label" htmlFor={selectId}>
-        {label}
-        {required && <span className="required" aria-label="必填">*</span>}
-      </label>
-      <select
-        id={selectId}
-        value={isValidValue ? value || '' : ''}
-        onChange={handleChange}
-        className="form-select"
-        required={required}
-        disabled={disabled}
-        aria-label={`选择${label}`}
-      >
-        <option value="">选择时间</option>
-        {timeOptions.map(time => (
-          <option key={time} value={time}>
-            {time}
-          </option>
-        ))}
-      </select>
-    </div>
-  )
+  // Close on click outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+        setIsOpen(false)
+      }
+    }
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [isOpen])
+
+  // Handle selection
+   const handleSelect = useCallback((hour: string, minute: string) => {
+     if (!hour || !minute) return
+     const newValue = `${hour}:${minute}`
+     
+     // Validate range
+     if ((minTime && newValue < minTime) || (maxTime && newValue > maxTime)) {
+       return
+     }
+     
+     onChange(newValue)
+   }, [onChange, minTime, maxTime])
+
+   const handleClear = useCallback((e: React.MouseEvent) => {
+     e.stopPropagation()
+     onChange('')
+     setIsOpen(false)
+   }, [onChange])
+ 
+   // Scroll to active items when opened
+   useEffect(() => {
+     if (isOpen) {
+       const scrollToActive = (columnRef: React.RefObject<HTMLDivElement>, val: string) => {
+         if (columnRef.current) {
+           const activeItem = columnRef.current.querySelector(`[data-value="${val}"]`) as HTMLElement
+           if (activeItem) {
+             // 添加scrollTo方法存在性检查，避免测试环境中的错误
+             if (typeof columnRef.current.scrollTo === 'function') {
+               columnRef.current.scrollTo({
+                 top: activeItem.offsetTop - columnRef.current.offsetTop - 80,
+                 behavior: 'smooth'
+               })
+             } else {
+               // 降级处理：直接设置scrollTop
+               columnRef.current.scrollTop = activeItem.offsetTop - columnRef.current.offsetTop - 80
+             }
+           }
+         }
+       }
+       const timer = setTimeout(() => {
+         scrollToActive(hourColumnRef, currentHour || '00')
+         scrollToActive(minuteColumnRef, currentMinute || '00')
+       }, 50)
+       return () => clearTimeout(timer)
+     }
+   }, [isOpen, currentHour, currentMinute])
+ 
+   return (
+     <div className={`time-selector ${isOpen ? 'open' : ''}`} ref={containerRef}>
+       <label className="form-label" htmlFor={selectId}>
+         {label}
+         {required && <span className="required" aria-label="必填">*</span>}
+       </label>
+       
+       <div className="time-selector-trigger-wrapper">
+         <button
+           id={selectId}
+           type="button"
+           className="time-selector-trigger"
+           onClick={toggleDropdown}
+           disabled={disabled}
+           aria-haspopup="listbox"
+           aria-expanded={isOpen}
+         >
+           {value ? (
+             <span className="selected-time">{value}</span>
+           ) : (
+             <span className="placeholder">选择时间</span>
+           )}
+           <span className="chevron">
+             <svg width="10" height="6" viewBox="0 0 10 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+               <path d="M1 1L5 5L9 1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+             </svg>
+           </span>
+         </button>
+         {value && !disabled && (
+           <button 
+             type="button" 
+             className="time-clear-btn" 
+             onClick={handleClear}
+             aria-label="清除时间"
+           >
+             ×
+           </button>
+         )}
+       </div>
+ 
+       {isOpen && (
+         <div className="time-dropdown">
+           <div className="time-dropdown-header">
+             <span>选择时间</span>
+             <button type="button" className="done-btn" onClick={() => setIsOpen(false)}>完成</button>
+           </div>
+           <div className="time-wheel-container">
+             <div className="time-wheel-selection-highlight"></div>
+             
+             <div className="time-wheel-column" ref={hourColumnRef}>
+               {HOURS.map(h => (
+                 <div
+                   key={h}
+                   data-value={h}
+                   className={`time-wheel-item ${currentHour === h ? 'active' : ''}`}
+                   onClick={() => handleSelect(h, currentMinute || '00')}
+                 >
+                   {h}
+                 </div>
+               ))}
+             </div>
+ 
+             <div className="time-wheel-column" ref={minuteColumnRef}>
+               {MINUTES.map(m => (
+                 <div
+                   key={m}
+                   data-value={m}
+                   className={`time-wheel-item ${currentMinute === m ? 'active' : ''}`}
+                   onClick={() => handleSelect(currentHour || '00', m)}
+                 >
+                   {m}
+                 </div>
+               ))}
+             </div>
+           </div>
+         </div>
+       )}
+     </div>
+   )
 }
 
 export default TimeSelector

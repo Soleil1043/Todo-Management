@@ -4,6 +4,8 @@ import { todoApi, recordToArray } from '../services/api'
 import Icon from './Icon'
 import Modal from './Modal'
 import { useToast } from './Toast'
+import RecycledTodoItem from './RecycledTodoItem'
+import { useLoading } from '../contexts/LoadingContext'
 
 interface RecycleBinProps {
   isOpen: boolean
@@ -21,7 +23,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
   onClearBin,
 }) => {
   const [recycledTodos, setRecycledTodos] = useState<TodoSchema[]>([])
-  const [loading, setLoading] = useState(false)
+  const { isLoading: loading, setLoading } = useLoading()
   const [confirmAction, setConfirmAction] = useState<
     | null
     | { kind: 'permanentDelete'; id: number }
@@ -38,7 +40,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
       const todoArray = recordToArray(data)
       setRecycledTodos(todoArray)
     } catch (error) {
-      showToast('加载回收站失败，请稍后重试', 'error')
+      showToast('加载垃圾桶失败，请稍后重试', 'error')
     } finally {
       setLoading(false)
     }
@@ -105,7 +107,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
         await todoApi.clearRecycleBin()
         setRecycledTodos([])
         onClearBin()
-        showToast('回收站已清空', 'success')
+        showToast('垃圾桶已清空', 'success')
       }
 
       if (confirmAction.kind === 'batchRestore') {
@@ -127,7 +129,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
   const footer = (
     <>
       <button
-        className="btn-restore-all"
+        className="btn-primary"
         onClick={requestBatchRestore}
         disabled={recycledTodos.length === 0 || loading}
         type="button"
@@ -136,7 +138,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
         一键恢复
       </button>
       <button
-        className="btn-clear"
+        className="btn-danger"
         onClick={requestClearBin}
         disabled={recycledTodos.length === 0 || loading}
         type="button"
@@ -152,7 +154,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
       <Modal
         isOpen={isOpen}
         onClose={onClose}
-        title="回收站"
+        title="垃圾桶"
         footer={footer}
         className="recycle-bin-modal"
       >
@@ -161,57 +163,17 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
             <div className="loading">加载中...</div>
           ) : recycledTodos.length === 0 ? (
             <div className="empty-state">
-              <p>回收站为空</p>
+              <p>垃圾桶为空</p>
             </div>
           ) : (
             recycledTodos.map(todo => (
-              <div key={todo.id} className="todo-item" style={{ marginBottom: 12 }}>
-                <div className="todo-content">
-                  <div className="todo-header">
-                    <h4 className="todo-title">{todo.title}</h4>
-                  </div>
-                  {todo.description && <p className="todo-description">{todo.description}</p>}
-                  <div className="todo-meta">
-                    <div className="meta-item">
-                        <Icon name="tag" size={14} />
-                        <span className={`priority-badge priority-${todo.priority}`}>
-                        {todo.priority === 'high' ? '高' :
-                        todo.priority === 'medium' ? '中' : '低'}优先级
-                        </span>
-                    </div>
-                    {(todo.start_time || todo.end_time) && (
-                      <div className="meta-item">
-                        <Icon name="clock" size={14} />
-                        <span>
-                            {todo.start_time && `${todo.start_time}`}
-                            {todo.start_time && todo.end_time && ' - '}
-                            {todo.end_time && `${todo.end_time}`}
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <div className="todo-actions">
-                  <button
-                    className="btn-restore"
-                    onClick={() => handleRestore(todo)}
-                    disabled={loading}
-                    type="button"
-                    title="恢复"
-                  >
-                    <Icon name="restore" size={18} />
-                  </button>
-                  <button
-                    className="btn-delete-permanent"
-                    onClick={() => requestPermanentDelete(todo.id!)}
-                    disabled={loading}
-                    type="button"
-                    title="永久删除"
-                  >
-                    <Icon name="trash" size={18} />
-                  </button>
-                </div>
-              </div>
+              <RecycledTodoItem
+                key={todo.id}
+                todo={todo}
+                loading={loading}
+                onRestore={handleRestore}
+                onPermanentDelete={requestPermanentDelete}
+              />
             ))
           )}
         </div>
@@ -230,7 +192,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
                 取消
               </button>
               <button
-                className={confirmAction.kind === 'batchRestore' ? 'btn-save' : 'btn-delete'}
+                className={confirmAction.kind === 'batchRestore' ? 'btn-primary' : 'btn-danger'}
                 onClick={runConfirmAction}
                 disabled={loading}
                 type="button"

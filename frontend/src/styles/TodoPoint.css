@@ -1,0 +1,47 @@
+/* Todo Points on Canvas */
+.todo-point {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid;
+  background: white;
+  transform: translate(-50%, -50%);
+  cursor: pointer;
+  transition: transform 0.2s, background-color 0.2s;
+  z-index: 20;
+}
+
+.todo-point:hover {
+  transform: translate(-50%, -50%) scale(1.5);
+  z-index: 100;
+}
+
+.todo-point-content {
+  display: none;
+}
+
+/* Tooltip for Points */
+.todo-tooltip {
+  position: absolute;
+  background: var(--bg-card);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  border: 1px solid var(--border-color);
+  pointer-events: none;
+  z-index: 200;
+  width: 200px;
+  color: var(--text-primary);
+}
+
+.todo-tooltip-title {
+  font-weight: bold;
+  font-size: var(--text-sm);
+  margin-bottom: 4px;
+}
+
+.todo-tooltip-scores {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}

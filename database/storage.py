@@ -1,4 +1,4 @@
-from typing import Dict, Optional, List
+from typing import Dict, Optional, List, Any
 from abc import ABC, abstractmethod
 from models.schemas import TodoSchema
 
@@ -21,7 +21,7 @@ class TodoStorage(ABC):
         pass
     
     @abstractmethod
-    def update_todo(self, todo_id: int, **kwargs) -> bool:
+    def update_todo(self, todo_id: int, **kwargs: Any) -> bool:
         """更新待办事项的属性"""
         pass
     
@@ -56,6 +56,6 @@ class TodoStorage(ABC):
         pass
     
     @abstractmethod
-    def get_stats(self) -> dict:
+    def get_stats(self) -> Dict[str, Any]:
         """获取统计信息"""
         pass

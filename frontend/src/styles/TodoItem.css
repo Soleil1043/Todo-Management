@@ -1,0 +1,238 @@
+/* Todo List */
+.todo-list {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-2);
+}
+
+.empty-state {
+  text-align: center;
+  padding: var(--space-8);
+  color: var(--text-tertiary);
+  border: 2px dashed var(--border-color);
+  border-radius: var(--radius-lg);
+  margin: var(--space-4);
+}
+
+/* Todo Item - Styled to match Quadrant View's Priority Item */
+.todo-item {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  cursor: pointer;
+  transition: background 0.2s, height 0.2s, min-height 0.2s;
+  color: var(--text-primary);
+  position: relative;
+  min-height: 80px; /* 改为最小高度 */
+  height: auto; /* 允许内容撑开 */
+  background: var(--bg-card); /* Ensure background is set */
+}
+
+.todo-item.editing {
+  height: auto;
+  align-items: flex-start;
+  padding: var(--space-4);
+  background: var(--bg-card);
+  cursor: default;
+  z-index: 10;
+}
+
+.todo-item.editing .todo-checkbox-container {
+  margin-top: var(--space-2);
+}
+
+/* Remove the last border if needed, or keep it */
+.todo-list .todo-item:last-child {
+  border-bottom: none;
+}
+
+.todo-item:hover {
+  background: var(--bg-hover);
+}
+
+.todo-item.completed .todo-title,
+.todo-item.completed .todo-description {
+  text-decoration: line-through;
+  opacity: 0.6;
+}
+
+.todo-content {
+  flex: 1;
+  min-width: 0;
+  padding-right: var(--space-10); /* 为右侧按钮留出空间 */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.todo-title {
+  font-size: var(--text-sm);
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: 2px;
+  word-break: break-all;
+  transition: all 0.3s ease;
+  color: var(--text-primary);
+}
+
+.todo-description {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  margin: 0 0 4px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.todo-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+}
+
+.meta-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.completed-badge {
+  font-size: var(--text-xs);
+  color: var(--color-success);
+  font-weight: bold;
+}
+
+/* Actions */
+.todo-actions {
+  position: absolute;
+  right: var(--space-2);
+  top: 50%;
+  transform: translateY(-50%); /* 垂直居中按钮组 */
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.todo-item:hover .todo-actions {
+  opacity: 1;
+}
+
+.todo-actions button {
+  background: transparent;
+  border: none;
+  padding: 4px;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-tertiary);
+  transition: all 0.2s;
+}
+
+.todo-actions .btn-edit:hover {
+  background: rgba(var(--color-primary-rgb), 0.1);
+  color: var(--color-primary);
+}
+
+.todo-actions .btn-delete:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--color-danger);
+}
+
+/* Checkbox Style */
+.todo-checkbox-container {
+  padding-top: 2px;
+  flex-shrink: 0;
+}
+
+.todo-checkbox {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  border-radius: 50%;
+  border: 2px solid var(--border-color);
+  appearance: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background-color: transparent;
+}
+
+.todo-checkbox:checked {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.todo-checkbox:checked::before {
+  content: '';
+  display: block;
+  width: 8px;
+  height: 4px;
+  border-left: 2px solid white;
+  border-bottom: 2px solid white;
+  transform: rotate(-45deg) translate(1px, -1px);
+}
+
+.todo-checkbox:hover {
+  border-color: var(--color-primary);
+}
+
+/* Dragging state */
+.todo-item.dragging {
+  opacity: 0.5;
+  background: var(--bg-hover);
+  box-shadow: var(--shadow-md);
+}
+
+/* Edit Mode Styles */
+.todo-edit {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+  min-width: 0;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  width: 100%;
+}
+
+.edit-actions .btn-save,
+.edit-actions .btn-cancel {
+  width: auto;
+  min-width: 80px;
+  padding: var(--space-2) var(--space-4);
+  height: 36px;
+  font-size: var(--text-sm);
+  margin: 0;
+}
+
+.edit-actions .btn-save {
+  flex: 2;
+}
+
+.edit-actions .btn-cancel {
+  flex: 1;
+}
+
+.edit-input,
+.edit-textarea {
+  width: 100%;
+  box-sizing: border-box;
+}
