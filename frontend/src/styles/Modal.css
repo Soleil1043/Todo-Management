@@ -1,0 +1,88 @@
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: var(--space-4);
+  transition: all 0.3s ease;
+}
+
+body.has-wallpaper .modal-overlay {
+  background: rgba(0, 0, 0, 0.2); /* 有壁纸时减弱遮罩颜色，避免叠加过深 */
+  backdrop-filter: blur(var(--bg-blur, 5px));
+}
+
+.modal-content {
+  background: var(--bg-card);
+  width: 100%;
+  max-height: 85vh;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease;
+}
+
+body.has-wallpaper .modal-content {
+  background-color: rgba(var(--bg-card-rgb), var(--surface-opacity, 0.8)) !important;
+  backdrop-filter: blur(var(--bg-blur, 10px));
+  -webkit-backdrop-filter: blur(var(--bg-blur, 10px));
+}
+
+.modal-header {
+  padding: var(--space-4) var(--space-6);
+  border-bottom: 1px solid var(--border-color);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.modal-title {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.btn-close {
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-close:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.modal-body {
+  padding: var(--space-6);
+  overflow-y: auto;
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.modal-footer {
+  padding: var(--space-4) var(--space-6);
+  border-top: 1px solid var(--border-color);
+  background: var(--bg-body);
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-3);
+}
+
+body.has-wallpaper .modal-footer {
+  background: transparent !important; /* 避免在半透明弹窗内再次叠加背景色 */
+}

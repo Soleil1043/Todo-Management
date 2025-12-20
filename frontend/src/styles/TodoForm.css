@@ -1,0 +1,10 @@
+.todo-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 80px;
+}

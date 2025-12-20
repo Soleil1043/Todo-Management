@@ -1,160 +1,173 @@
-import { useState, useEffect } from 'react'
-import TodoForm from './components/TodoForm'
-import TodoList from './components/TodoList'
-import RecycleBin from './components/RecycleBin'
-import { TodoItem, TodoFormData } from './types/todo'
-import { todoApi } from './services/api'
+import { useState, useEffect, useCallback, useMemo, lazy, Suspense } from 'react'
+import { DndContext, DragEndEvent, DragStartEvent, DragOverlay } from '@dnd-kit/core'
+
+// Components
+import Sidebar from './components/Sidebar'
+import AppHeader from './components/AppHeader'
+import DashboardView from './components/DashboardView'
+import MatrixView from './components/MatrixView'
+
+// Hooks
+import { useAppTodos } from './hooks/useAppTodos'
+import { useAppSettings } from './hooks/useAppSettings'
+import { useLoading } from './contexts/LoadingContext'
+import { usePerformanceMonitoring, useMemoryMonitoring, useWebVitals } from './hooks/usePerformance'
+
+// Styles
 import './App.css'
 
-function App() {
-  const [todos, setTodos] = useState<TodoItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  const [isRecycleBinOpen, setIsRecycleBinOpen] = useState(false)
+// Lazy Components
+const RecycleBin = lazy(() => import('./components/RecycleBin'))
+const AppearanceSettings = lazy(() => import('./components/AppearanceSettings'))
 
+/**
+ * App 主入口组件
+ * 负责协调全局状态、外观设置和布局渲染
+ */
+function App() {
+  // UI 状态
+  const [isRecycleBinOpen, setIsRecycleBinOpen] = useState(false)
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false)
+  const [viewMode, setViewMode] = useState<'list' | 'quadrant'>('list')
+  const [activeId, setActiveId] = useState<number | null>(null)
+
+  // 外观设置 Hook
+  const {
+    theme,
+    bgImage,
+    bgOpacity,
+    bgBlur,
+    spotlightType,
+    autoTrash,
+    handleThemeChange,
+    handleBgImageChange,
+    handleBgOpacityChange,
+    handleBgBlurChange,
+    handleSpotlightTypeChange,
+    handleAutoTrashChange
+  } = useAppSettings()
+  
+  // 核心业务逻辑 Hook
+  const {
+    todos,
+    loadTodos,
+    handleAddTodo,
+    handleToggleComplete,
+    handleDeleteTodo,
+    handleUpdateTodo,
+    handleUpdateTodoWithScores,
+    handleRestoreTodo,
+    completedCount,
+    totalCount
+  } = useAppTodos(autoTrash)
+
+  // 其他全局 Context
+  const { isLoading: loading } = useLoading()
+
+  // 性能监控
+  usePerformanceMonitoring('App')
+  useMemoryMonitoring('App')
+  useWebVitals()
+
+  // 初始加载
   useEffect(() => {
     loadTodos()
+  }, [loadTodos])
+
+  // 拖拽处理
+  const handleDragStart = useCallback((event: DragStartEvent) => {
+    setActiveId(Number(event.active.id))
   }, [])
 
-  const loadTodos = async () => {
-    try {
-      setLoading(true)
-      const data = await todoApi.getAllTodos()
-      setTodos(data)
-      setError(null)
-    } catch (err) {
-      setError('加载待办事项失败')
-      console.error('Error loading todos:', err)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const handleDragEnd = useCallback((_event: DragEndEvent) => {
+    setActiveId(null)
+  }, [])
 
-  const handleAddTodo = async (data: TodoFormData) => {
-    try {
-      const newTodo = await todoApi.createTodo({
-        ...data,
-        completed: false
-      } as TodoItem)
-      setTodos([...todos, newTodo])
-      setError(null)
-    } catch (err) {
-      setError('添加待办事项失败')
-      console.error('Error adding todo:', err)
-    }
-  }
-
-  const handleToggleComplete = async (id: number) => {
-    try {
-      const updatedTodo = await todoApi.toggleTodoStatus(id)
-      setTodos(todos.map(todo => 
-        todo.id === id ? { ...todo, completed: updatedTodo.completed } : todo
-      ))
-    } catch (err) {
-      setError('更新状态失败')
-      console.error('Error toggling status:', err)
-    }
-  }
-
-  const handleDeleteTodo = async (id: number) => {
-    try {
-      await todoApi.deleteTodo(id)
-      setTodos(todos.filter(todo => todo.id !== id))
-      setError(null)
-    } catch (err) {
-      setError('删除待办事项失败')
-      console.error('Error deleting todo:', err)
-    }
-  }
-
-  const handleUpdateTodo = async (id: number, title: string, description: string, start_time?: string, end_time?: string) => {
-    try {
-      const updatedTodo = await todoApi.updateTodo(id, {
-        title,
-        description,
-        start_time,
-        end_time
-      })
-      setTodos(todos.map(todo => 
-        todo.id === id ? updatedTodo : todo
-      ))
-      setError(null)
-    } catch (err) {
-      setError('更新待办事项失败')
-      console.error('Error updating todo:', err)
-    }
-  }
-
-  const completedCount = todos.filter(todo => todo.completed).length
-  const totalCount = todos.length
-
-  const handleRestoreTodo = (todo: TodoItem) => {
-    setTodos([...todos, todo])
-  }
-
-  const handlePermanentlyDelete = (_id: number) => {
-    // 无需更新主列表，已在回收站组件中处理
-  }
-
-  const handleClearBin = () => {
-    // 无需更新主列表，已在回收站组件中处理
-  }
-
-  return (
-    <div className="app">
-      <header className="app-header">
-        <h1>待办事项管理</h1>
-        <div className="header-actions">
-          <p className="stats">
-            总计: {totalCount} | 已完成: {completedCount} | 待完成: {totalCount - completedCount}
-          </p>
-          <button 
-            className="btn-recycle-bin" 
-            onClick={() => setIsRecycleBinOpen(true)}
-            title="打开回收站"
-          >
-            🗑️ 回收站
-          </button>
-        </div>
-      </header>
-
-      <main className="app-main">
-        {error && (
-          <div className="error-message">
-            {error}
-            <button onClick={() => setError(null)} className="btn-close">×</button>
-          </div>
-        )}
-
-        <section className="add-todo-section">
-          <h2>添加新的待办事项</h2>
-          <TodoForm onSubmit={handleAddTodo} />
-        </section>
-
-        <section className="todo-list-section">
-          <h2>待办事项列表</h2>
-          {loading ? (
-            <div className="loading">加载中...</div>
-          ) : (
-            <TodoList
-              todos={todos}
-              onToggleComplete={handleToggleComplete}
-              onDelete={handleDeleteTodo}
-              onUpdate={handleUpdateTodo}
-            />
-          )}
-        </section>
-      </main>
-        
-        <RecycleBin
-          isOpen={isRecycleBinOpen}
-          onClose={() => setIsRecycleBinOpen(false)}
-          onRestore={handleRestoreTodo}
-          onPermanentlyDelete={handlePermanentlyDelete}
-          onClearBin={handleClearBin}
-        />
+  // 拖拽覆盖层内容缓存
+  const dragOverlayContent = useMemo(() => {
+    if (!activeId) return null
+    const activeTodo = todos.find(t => t.id === activeId)
+    if (!activeTodo) return null
+    
+    return (
+      <div className="draggable-item">
+        {activeTodo.title}
       </div>
     )
-  }
+  }, [activeId, todos])
+
+  return (
+    <DndContext onDragStart={handleDragStart} onDragEnd={handleDragEnd}>
+      <div className="app-layout">
+        <Sidebar 
+          viewMode={viewMode}
+          setViewMode={setViewMode}
+          onOpenRecycleBin={() => setIsRecycleBinOpen(true)}
+          onOpenSettings={() => setIsSettingsOpen(true)}
+        />
+
+        <main className="app-main">
+          <AppHeader 
+            title={viewMode === 'list' ? '经典' : '四象限'} 
+            icon={viewMode === 'list' ? 'list' : 'grid'}
+          />
+
+          <div className="main-content-scroll">
+            {viewMode === 'list' ? (
+              <DashboardView
+                loading={loading}
+                todos={todos}
+                completedCount={completedCount}
+                totalCount={totalCount}
+                onAddTodo={handleAddTodo}
+                onToggleComplete={handleToggleComplete}
+                onDeleteTodo={handleDeleteTodo}
+                onUpdateTodo={handleUpdateTodo}
+              />
+            ) : (
+              <MatrixView
+                todos={todos}
+                onUpdateTodo={handleUpdateTodoWithScores}
+                onDeleteTodo={handleDeleteTodo}
+                onToggleComplete={handleToggleComplete}
+                spotlightType={spotlightType}
+              />
+            )}
+          </div>
+        </main>
+
+        <Suspense fallback={null}>
+          <RecycleBin
+            isOpen={isRecycleBinOpen}
+            onClose={() => setIsRecycleBinOpen(false)}
+            onRestore={handleRestoreTodo}
+            onPermanentlyDelete={() => {}} // 已在内部处理
+            onClearBin={() => {}} // 已在内部处理
+          />
+          <AppearanceSettings
+            isOpen={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            theme={theme}
+            onThemeChange={handleThemeChange}
+            bgImage={bgImage}
+            onBgImageChange={() => handleBgImageChange(true)}
+            bgOpacity={bgOpacity}
+            onBgOpacityChange={handleBgOpacityChange}
+            bgBlur={bgBlur}
+            onBgBlurChange={handleBgBlurChange}
+            spotlightType={spotlightType}
+            onSpotlightTypeChange={handleSpotlightTypeChange}
+            autoTrash={autoTrash}
+            onAutoTrashChange={handleAutoTrashChange}
+          />
+        </Suspense>
+      </div>
+
+      <DragOverlay>
+        {dragOverlayContent}
+      </DragOverlay>
+    </DndContext>
+  )
+}
 
 export default App
