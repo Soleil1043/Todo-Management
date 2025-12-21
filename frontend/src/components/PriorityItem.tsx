@@ -58,6 +58,8 @@ const PriorityItem: React.FC<PriorityItemProps> = ({
       >
         <input
           type="checkbox"
+          name={`priority-complete-${todo.id}`}
+          id={`priority-complete-${todo.id}`}
           checked={!!todo.completed}
           onChange={(e) => {
             e.preventDefault();

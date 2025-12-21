@@ -89,7 +89,8 @@ describe('useDragLogic', () => {
     expect(mockEvent.preventDefault).toHaveBeenCalled()
     expect(result.current.draggingTodo).toEqual(mockTodos[0])
     expect(defaultProps.setSelectedTodoId).toHaveBeenCalledWith(1)
-    expect(result.current.localDragPos).toEqual({ x: 100, y: 100 })
+    // 100px 在 400px 宽度的 canvas 中是 25%
+    expect(result.current.localDragPos).toEqual({ x: 25, y: 25 })
   })
 
   it('handles mouse move event during drag', () => {
@@ -106,7 +107,7 @@ describe('useDragLogic', () => {
       result.current.handleMouseDown(mockMouseDownEvent, mockTodos[0])
     })
 
-    // 移动鼠标
+    // 然后移动
     const mockMouseMoveEvent = {
       clientX: 200,
       clientY: 200,
@@ -114,11 +115,13 @@ describe('useDragLogic', () => {
 
     act(() => {
       result.current.handleMouseMove(mockMouseMoveEvent)
+      vi.runAllTimers()
     })
 
-    expect(result.current.localDragPos).toEqual({ x: 200, y: 200 })
-    expect(result.current.previewScores).toEqual({ x: 0, y: 0 }) // 基于positionToScore的计算
-  })
+    // 200px 在 400px 宽度的 canvas 中是 50%
+    expect(result.current.localDragPos).toEqual({ x: 50, y: 50 })
+    expect(result.current.previewScores).toEqual({ x: 0, y: 0 }) // 50% 对应 score 0
+  }) // 基于positionToScore的计算
 
   it('handles mouse up event and updates todo', () => {
     const { result } = renderHook(() => useDragLogic(defaultProps))
@@ -179,7 +182,36 @@ describe('useDragLogic', () => {
 
     expect(result.current.draggingTodo).toEqual(mockTodos[1])
     expect(defaultProps.setSelectedTodoId).toHaveBeenCalledWith(2)
-    expect(result.current.localDragPos).toEqual({ x: 150, y: 150 })
+    // 150px 在 400px 宽度的 canvas 中是 37.5%
+    expect(result.current.localDragPos).toEqual({ x: 37.5, y: 37.5 })
+  })
+
+  it('handles touch move event', () => {
+    const { result } = renderHook(() => useDragLogic(defaultProps))
+    
+    // 先开始触摸
+    const mockTouchStartEvent = {
+      preventDefault: vi.fn(),
+      touches: [{ clientX: 150, clientY: 150 }]
+    } as unknown as React.TouchEvent
+
+    act(() => {
+      result.current.handleTouchStart(mockTouchStartEvent, mockTodos[1])
+    })
+
+    // 然后移动
+    const mockTouchMoveEvent = {
+      preventDefault: vi.fn(),
+      touches: [{ clientX: 250, clientY: 250 }]
+    } as unknown as React.TouchEvent
+
+    act(() => {
+      result.current.handleTouchMove(mockTouchMoveEvent)
+      vi.runAllTimers()
+    })
+
+    // 250px 在 400px 宽度的 canvas 中是 62.5%
+    expect(result.current.localDragPos).toEqual({ x: 62.5, y: 62.5 })
   })
 
   it('handles unassigned drag start', () => {
@@ -277,8 +309,9 @@ describe('useDragLogic', () => {
 
     expect(mockDragOverEvent.preventDefault).toHaveBeenCalled()
     expect(mockDragOverEvent.dataTransfer.dropEffect).toBe('move')
-    expect(result.current.localDragPos).toEqual({ x: 250, y: 150 })
-    expect(result.current.previewScores).toEqual({ x: 1, y: 1 })
+    // 250px 是 62.5%, 150px 是 37.5%
+    expect(result.current.localDragPos).toEqual({ x: 62.5, y: 37.5 })
+    expect(result.current.previewScores).toEqual({ x: 1, y: 1 }) // 62.5% -> 1, 37.5% (100-37.5=62.5%) -> 1
   })
 
   it('handles invalid JSON in data transfer', () => {

@@ -1,284 +1,293 @@
-# Development Experience Optimization Guide
+# 开发体验优化指南
 
-## 🚀 Quick Start
+## 🚀 快速开始
 
-### Prerequisites
+### 前置条件
 
-- Node.js 18.x or 20.x
-- npm 9.x or higher
+- Node.js 18.x 或 20.x
+- npm 9.x 或更高版本
+- Python 3.10+ (用于后端服务)
 
-### Installation
+### 安装
 
 ```bash
 cd frontend
 npm install
 ```
 
-### Development Commands
+### 开发命令
 
 ```bash
-# Start development server
+# 启动开发服务器
 npm run dev
 
-# Run tests in watch mode
+# 以监听模式运行测试
 npm run test:watch
 
-# Run tests with coverage
+# 运行测试并生成覆盖率报告
 npm run test:coverage:component
 
-# Build for production
+# 构建生产版本
 npm run build
 
-# Preview production build
+# 预览生产版本
 npm run preview
 ```
 
-## 📁 Project Structure
+## 📁 项目结构
 
 ```text
 src/
-├── components/          # React components
-│   ├── TodoForm.tsx   # Todo creation form
-│   ├── TodoItem.tsx   # Individual todo item
-│   ├── TodoList.tsx   # Todo list container
-│   ├── QuadrantView.tsx # Eisenhower Matrix visualization
+├── components/          # React 组件
+│   ├── DashboardView.tsx # 数据分析仪表盘
+│   ├── MatrixView.tsx    # 优先级矩阵
+│   ├── QuadrantView.tsx  # 艾森豪威尔矩阵
+│   ├── AppearanceSettings.tsx # 外观设置与自定义
+│   ├── Sidebar.tsx      # 导航栏
 │   └── ...
-├── contexts/           # React Context providers
-│   └── LoadingContext.tsx
-├── hooks/              # Custom React hooks
-│   ├── useTimeValidation.ts
-│   ├── useDragLogic.ts
+├── contexts/           # React Context 提供者
+│   ├── TodoContext.tsx   # 待办事项数据与逻辑
+│   ├── SettingsContext.tsx # 应用偏好设置
+│   └── LoadingContext.tsx # 全局加载状态
+├── hooks/              # 自定义 React hooks
+│   ├── useAppTodos.ts    # 主要待办事项操作
+│   ├── useAppSettings.ts # 设置管理
+│   ├── useTimeValidation.ts # 时间校验
+│   ├── useDragLogic.ts    # 拖拽逻辑
 │   └── ...
-├── services/           # API services
-│   └── api.ts
-├── utils/              # Utility functions
-│   └── quadrantUtils.ts
-├── types/              # TypeScript type definitions
+├── services/           # API 服务
+│   └── api.ts           # Axios 服务封装
+├── config/             # 全局配置
+│   ├── sentry.ts        # Sentry 初始化
+│   └── performance.ts   # 性能追踪配置
+├── utils/              # 工具函数
+│   └── quadrantUtils.ts # 象限计算工具
+├── types/              # TypeScript 类型定义
 │   └── todo.ts
-└── styles/             # CSS stylesheets
+└── styles/             # CSS 样式表
     ├── Common.css
     └── ...
 ```
 
-## 🧪 Testing Strategy
+## 🧪 测试策略
 
-### Test Types
+### 测试类型
 
-1. **Component Tests** - Unit tests for React components
-2. **Hook Tests** - Tests for custom React hooks
-3. **Utility Tests** - Tests for utility functions
-4. **E2E Tests** - End-to-end tests (Playwright)
+1. **组件测试** - React 组件的单元测试
+2. **Hook 测试** - 自定义 React hooks 的测试
+3. **工具函数测试** - 工具函数的单元测试
+4. **E2E 测试** - 端到端测试 (使用 Playwright)
 
-### Test Commands
+### 测试命令
 
 ```bash
-# Run all tests
+# 运行所有测试
 npm test
 
-# Run tests in watch mode
+# 以监听模式运行测试
 npm run test:watch
 
-# Run component tests only
+# 仅运行组件测试
 npm test -- --exclude="**/e2e/**" --exclude="**/api.test.ts"
 
-# Run tests with coverage
+# 运行测试并生成覆盖率报告
 npm run test:coverage:component
 
-# Run E2E tests
+# 运行 E2E 测试
 npm run test:e2e
 ```
 
-### Test Coverage Goals
+### 测试覆盖率目标
 
-- **High Priority Components**: 90%+ coverage
-- **Medium Priority Components**: 80%+ coverage
-- **Low Priority Components**: 70%+ coverage
+- **高优先级组件**: 90%+ 覆盖率
+- **中优先级组件**: 80%+ 覆盖率
+- **低优先级组件**: 70%+ 覆盖率
 
-## 🛡️ Error & Performance Monitoring
+## 🛡️ 错误与性能监控
 
-### Error Boundary
+### 错误边界 (Error Boundary)
 
-The application is wrapped with an `ErrorBoundary` component to catch and handle rendering errors gracefully. It provides a fallback UI and allows users to retry or refresh the page.
+应用被封装在 `ErrorBoundary` 组件中，以优雅地捕获和处理渲染错误。它提供了后备 UI，并允许用户重试或刷新页面。
 
-### Sentry Integration
+### Sentry 集成
 
-Sentry is integrated for real-time error tracking and performance monitoring.
+集成 Sentry 用于实时错误追踪和性能监控。
 
-- To enable Sentry, add your DSN to the `.env` file: `VITE_SENTRY_DSN=your_dsn_here`
-- Errors are automatically captured by the `ErrorBoundary` and reported to Sentry.
+- 要启用 Sentry，请在 `.env` 文件中添加您的 DSN：`VITE_SENTRY_DSN=your_dsn_here`
+- 错误会被 `ErrorBoundary` 自动捕获并报告给 Sentry。
 
-### Performance Monitoring
+### 性能监控
 
-- **Web Vitals**: Core Web Vitals (CLS, FID, LCP, FCP, TTFB) are monitored using the `web-vitals` library.
-- **Custom Hooks**:
-  - `usePerformanceMonitoring`: Monitors component rendering time.
-  - `useMemoryMonitoring`: Monitors memory usage.
-  - `useNetworkMonitoring`: Monitors API request performance.
-- Performance data is logged to the console in development and sent as breadcrumbs to Sentry.
+- **Web Vitals**: 使用 `web-vitals` 库监控核心指标 (CLS, FID, LCP, FCP, TTFB)。
+- **自定义 Hooks**:
+  - `usePerformanceMonitoring`: 监控组件渲染时间。
+  - `useMemoryMonitoring`: 监控内存使用情况。
+  - `useNetworkMonitoring`: 监控 API 请求性能。
+- 性能数据在开发环境下记录到控制台，并在生产环境下作为面包屑 (breadcrumbs) 发送到 Sentry。
 
-## ⚡ Performance Optimization
+## ⚡ 性能优化
 
-### Implemented Optimizations
+### 已实现的优化
 
-1. **React.memo** - Component memoization
-2. **useMemo** - Expensive calculation caching
-3. **useCallback** - Function reference stability
-4. **Code Splitting** - Lazy loading for large components
+1. **React.memo** - 组件记忆化
+2. **useMemo** - 昂贵计算结果缓存
+3. **useCallback** - 稳定函数引用
+4. **代码分割 (Code Splitting)** - 对大型组件进行延迟加载
 
-### Optimization Monitoring
+### 优化监控
 
 ```bash
-# Build and analyze bundle size
+# 构建并分析包体积
 npm run build
 ls -lh dist/assets/
 ```
 
-### Performance Best Practices
+### 性能最佳实践
 
-- Use `React.memo` for expensive components
-- Cache expensive calculations with `useMemo`
-- Stabilize function references with `useCallback`
-- Implement optimistic UI updates
-- Use proper dependency arrays in hooks
+- 对渲染开销大的组件使用 `React.memo`
+- 使用 `useMemo` 缓存复杂计算结果
+- 使用 `useCallback` 稳定传递给子组件的回调函数
+- 实现乐观 UI 更新
+- 在 hooks 中正确配置依赖数组
 
-## 🎯 Code Quality
+## 🎯 代码质量
 
-### Linting & Formatting
+### 代码规范与格式化
 
 ```bash
-# Run ESLint
+# 运行 ESLint
 npm run lint
 
-# Run TypeScript type checking
+# 运行 TypeScript 类型检查
 npm run typecheck
 ```
 
-### Code Standards
+### 代码标准
 
-- Use TypeScript for type safety
-- Follow React best practices
-- Write comprehensive tests
-- Document complex logic
-- Use meaningful variable names
+- 使用 TypeScript 确保类型安全
+- 遵循 React 最佳实践
+- 编写完善的测试用例
+- 为复杂逻辑编写文档注释
+- 使用具有明确意义的变量命名
 
-## 🔧 Development Tools
+## 🔧 开发工具
 
-### Recommended VS Code Extensions
+### 推荐的 VS Code 扩展
 
-1. **ESLint** - Real-time linting
-2. **Prettier** - Code formatting
-3. **TypeScript Vue Plugin** - TypeScript support
-4. **Vitest** - Test runner integration
-5. **GitLens** - Git integration
+1. **ESLint** - 实时代码规范检查
+2. **Prettier** - 代码格式化
+3. **TypeScript Vue Plugin** - TypeScript 支持
+4. **Vitest** - 测试运行器集成
+5. **GitLens** - Git 集成增强
 
-### Development Configuration
+### 开发配置
 
-The project includes:
+项目包含以下配置：
 
-- **ESLint configuration** (`.eslintrc.json`)
-- **TypeScript configuration** (`tsconfig.json`)
-- **Vitest configuration** (`vitest.config.ts`)
-- **Vite configuration** (`vite.config.ts`)
+- **ESLint 配置** (`.eslintrc.json`)
+- **TypeScript 配置** (`tsconfig.json`)
+- **Vitest 配置** (`vitest.config.ts`)
+- **Vite 配置** (`vite.config.ts`)
 
-## 📊 Debugging & Profiling
+## 📊 调试与分析
 
 ### React Developer Tools
 
-Install the React Developer Tools browser extension for:
+安装浏览器扩展 React Developer Tools 用于：
 
-- Component tree inspection
-- Props and state debugging
-- Performance profiling
+- 查看组件树结构
+- 调试 Props 和 State
+- 进行性能分析 (Profiling)
 
-### Console Debugging
+### 控制台调试
 
 ```typescript
-// Development logging
+// 开发环境下的调试日志
 if (process.env.NODE_ENV === 'development') {
-  console.log('Debug info:', data);
+  console.log('调试信息:', data);
 }
 ```
 
-### Performance Profiling
+### 性能分析
 
-Use the React DevTools Profiler to:
+使用 React DevTools 的 Profiler 标签页：
 
-- Identify performance bottlenecks
-- Analyze component render times
-- Optimize re-renders
+- 识别性能瓶颈
+- 分析组件渲染耗时
+- 优化不必要的重渲染
 
-## 🚦 CI/CD Pipeline
+## 🚦 CI/CD 流水线
 
-### GitHub Actions Workflow
+### GitHub Actions 工作流
 
-The CI pipeline automatically:
+CI 流水线会自动执行以下任务：
 
-1. Runs component tests (Node.js 18.x & 20.x)
-2. Generates coverage reports
-3. Runs linting and type checking
-4. Builds the application
-5. Analyzes bundle size
-6. Comments on PRs with coverage status
+1. 运行组件测试 (支持 Node.js 18.x 和 20.x)
+2. 生成覆盖率报告
+3. 执行代码规范检查和类型检查
+4. 构建应用程序
+5. 分析包体积
+6. 在 PR 下方自动回复覆盖率状态
 
-### Pre-commit Hooks
+### Pre-commit 钩子
 
-Pre-commit hooks ensure:
+Pre-commit 钩子确保：
 
-- Tests pass before commits
-- Code is properly linted
-- TypeScript compiles successfully
+- 提交代码前测试必须通过
+- 代码符合规范
+- TypeScript 编译成功
 
-## 📈 Monitoring & Metrics
+## 📈 监控指标
 
-### Test Coverage
+### 测试覆盖率
 
-- Coverage reports generated automatically
-- HTML reports available in `coverage/` directory
-- Coverage thresholds enforced in CI
+- 自动生成覆盖率报告
+- 可在 `coverage/` 目录下查看 HTML 格式报告
+- CI 流程中会强制执行覆盖率阈值检查
 
-### Bundle Analysis
+### 包体积分析
 
-- Bundle size monitored in CI
-- Performance budgets configured
-- Size warnings on large bundles
+- 在 CI 中监控包体积
+- 配置了性能预算 (Performance Budgets)
+- 包体积过大时会发出警告
 
-## 🎯 Development Workflow
+## 🎯 开发工作流
 
-### Feature Development
+### 功能开发
 
-1. Create feature branch
-2. Implement component with tests
-3. Ensure coverage meets thresholds
-4. Run linting and type checking
-5. Create pull request
-6. CI automatically validates changes
+1. 创建功能分支 (feature branch)
+2. 实现组件并编写配套测试
+3. 确保覆盖率达到目标阈值
+4. 运行规范检查和类型检查
+5. 创建 Pull Request
+6. CI 自动验证变更
 
-### Bug Fixes
+### Bug 修复
 
-1. Write failing test first
-2. Implement fix
-3. Ensure all tests pass
-4. Update documentation if needed
+1. 首先编写一个能够复现该 Bug 的失败测试
+2. 实现修复逻辑
+3. 确保所有测试通过
+4. 根据需要更新相关文档
 
-### Performance Improvements
+### 性能改进
 
-1. Profile current performance
-2. Implement optimization
-3. Measure improvement
-4. Add performance tests if applicable
+1. 分析当前性能表现
+2. 实现优化策略
+3. 测量改进效果
+4. 如果适用，添加性能基准测试
 
-## 🔗 Useful Links
+## 🔗 常用链接
 
-- [React Documentation](https://react.dev/)
-- [TypeScript Documentation](https://www.typescriptlang.org/)
-- [Vitest Documentation](https://vitest.dev/)
-- [Vite Documentation](https://vitejs.dev/)
-- [Testing Library Documentation](https://testing-library.com/)
+- [React 官方文档](https://react.dev/)
+- [TypeScript 官方文档](https://www.typescriptlang.org/)
+- [Vitest 官方文档](https://vitest.dev/)
+- [Vite 官方文档](https://vitejs.dev/)
+- [Testing Library 官方文档](https://testing-library.com/)
 
-## 🤝 Contributing
+## 🤝 贡献指南
 
-1. Follow the development workflow
-2. Write tests for new features
-3. Maintain code quality standards
-4. Update documentation
-5. Ensure CI passes before merging
+1. 遵循既定的开发工作流
+2. 为新功能编写测试用例
+3. 保持代码质量标准
+4. 同步更新相关文档
+5. 合并前确保 CI 通过

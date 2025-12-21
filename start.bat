@@ -1,6 +1,6 @@
 @echo off
 echo ==========================================
-echo   Todo Management - 启动项目
+echo   TodoGravita - 启动项目
 echo ==========================================
 
 echo 正在启动后端服务 (FastAPI)...

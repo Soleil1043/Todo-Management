@@ -1,6 +1,10 @@
 {
-  "name": "todo-management-frontend",
-  "description": "Todo Management Frontend - React + TypeScript",
+  "name": "todogravita-frontend",
+  "description": "TodoGravita Frontend - React + TypeScript",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Soleil1043/TodoGravita.git"
+  },
   "main": "index.js",
   "scripts": {
     "dev": "vite",

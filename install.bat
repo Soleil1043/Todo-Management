@@ -1,6 +1,6 @@
 @echo off
 echo ==========================================
-echo   Todo Management - 安装依赖
+echo   TodoGravita - 安装依赖
 echo ==========================================
 
 echo [1/2] 正在安装后端 Python 依赖...

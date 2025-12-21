@@ -1,4 +1,4 @@
-# Todo Management 前端设计系统（v1）
+# TodoGravita 前端设计系统（v1）
 
 ## 设计目标
 
@@ -25,8 +25,15 @@
 | `--color-quadrant-2` | 四象限：重要不紧急（左上） |
 | `--color-quadrant-3` | 四象限：紧急不重要（右下） |
 | `--color-quadrant-4` | 四象限：不重要不紧急（左下） |
+| `--glass-bg` | 毛玻璃效果背景色 |
+| `--glass-border` | 毛玻璃效果边框色 |
 
-主色控制：Neutral（灰阶）+ Primary（蓝）+ Danger（红）。
+## 个性化与外观
+
+- **自定义壁纸**: 支持上传本地图片作为背景，存储于后端 `system_settings`。
+- **毛玻璃效果 (Glassmorphism)**: 侧边栏和设置面板采用模糊背景设计，支持调节模糊度。
+- **主题系统**: 提供多种预设主题色，动态修改 `--color-primary` 及相关 Token。
+- **布局调节**: 支持侧边栏展开/收起，自动适配不同视口宽度。
 
 ## 排版
 

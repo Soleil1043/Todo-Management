@@ -1,78 +1,80 @@
-# Test Coverage & CI/CD Documentation
+# 测试覆盖率与 CI/CD 文档
 
-## 📊 Test Coverage
+## 📊 测试覆盖率
 
-### Current Coverage Status
+### 当前覆盖率状态
 
-- **Lines**: 98.31% (threshold: 80%)
-- **Functions**: 96.55% (threshold: 80%)
-- **Branches**: 92.14% (threshold: 80%)
-- **Statements**: 98.31% (threshold: 80%)
+- **行覆盖率 (Lines)**: 43.74% (阈值: 80%)
+- **函数覆盖率 (Functions)**: 61.05% (阈值: 80%)
+- **分支覆盖率 (Branches)**: 67.4% (阈值: 80%)
+- **语句覆盖率 (Statements)**: 43.74% (阈值: 80%)
 
-### Coverage Scripts
+*注意：覆盖率下降是由于引入了大量新组件（如 QuadrantCanvas, MatrixView, DashboardView 等），这些组件目前尚未完成单元测试编写。*
+
+### 覆盖率脚本
 
 ```bash
-# Run all tests with coverage
+# 运行所有测试并生成覆盖率报告
 npm run test:coverage
 
-# Run only component tests with coverage (excludes E2E and API tests)
+# 仅运行组件测试并生成覆盖率报告（不包括 E2E 和 API 测试）
 npm run test:coverage:component
 
-# Generate and open HTML coverage report
+# 生成并打开 HTML 格式的覆盖率报告
 npm run test:coverage:report
 
-# Watch mode with coverage
+# 以监听模式运行测试并实时生成覆盖率
 npm run test:watch:coverage
 ```
 
-### Coverage Configuration
+### 覆盖率配置
 
-Coverage is configured in `vitest.config.ts` with the following settings:
+覆盖率在 `vitest.config.ts` 中配置，主要设置如下：
 
-- **Provider**: v8
-- **Reporters**: text, json, html, lcov
-- **Thresholds**: 80% for all metrics (lines, functions, branches, statements)
-- **Exclusions**: test files, setup files, E2E tests, and configuration files
+- **提供者 (Provider)**: v8
+- **报告格式 (Reporters)**: text, json, html, lcov
+- **阈值 (Thresholds)**: 所有指标设为 80% (行, 函数, 分支, 语句)
+- **排除项 (Exclusions)**: 测试文件、设置文件、E2E 测试和配置文件
 
-### Coverage Report Location
+### 报告输出位置
 
-HTML coverage reports are generated in `coverage/` directory:
+HTML 覆盖率报告生成在 `coverage/` 目录下：
 
-- `coverage/index.html` - Main coverage report
-- `coverage/lcov-report/` - Detailed line-by-line coverage
-- `coverage/coverage-final.json` - Raw coverage data
+- `coverage/index.html` - 主报告入口
+- `coverage/lcov-report/` - 详细的逐行覆盖报告
+- `coverage/coverage-final.json` - 原始覆盖率数据
 
-## 🔄 CI/CD Pipeline
+## 🔄 CI/CD 流水线
 
-### GitHub Actions Workflow
+### GitHub Actions 工作流
 
-The CI pipeline is configured in `.github/workflows/ci.yml` and includes:
+CI 流水线配置在 `.github/workflows/ci.yml` 中，包含：
 
-1. **Test Job** (Node.js 18.x & 20.x):
-   - Install dependencies
-   - Run component tests
-   - Generate coverage reports
-   - Upload coverage artifacts
-   - Comment on PRs with coverage status
+1. **测试任务 (Test Job)** (支持 Node.js 18.x 和 20.x):
+   - 安装依赖
+   - 运行组件测试
+   - 生成覆盖率报告
+   - 上传覆盖率产物
+   - 在 PR 下方自动评论覆盖率状态
 
-2. **Lint Job**:
-   - Run ESLint
-   - Run TypeScript type checking
+2. **代码规范任务 (Lint Job)**:
+   - 运行 ESLint
+   - 运行 TypeScript 类型检查
 
-3. **Performance Job**:
-   - Build application
-   - Analyze bundle size
-   - Report build metrics
+3. **性能分析任务 (Performance Job)**:
+   - 构建应用程序
+   - 分析包体积
+   - 报告构建指标
 
-### Pre-commit Hooks
+### Pre-commit 钩子
 
-A pre-commit hook is configured to ensure:
+配置了 pre-commit 钩子以确保：
 
-- Component tests pass
-- Linting passes
-- TypeScript compilation succeeds
+- 组件测试通过
+- 代码规范检查通过
+- TypeScript 编译成功
 
-To install the pre-commit hook:
+安装 pre-commit 钩子：
 
 ```bash
 cp .git/hooks/pre-commit .git/hooks/pre-commit.backup 2>/dev/null || true
@@ -80,49 +82,28 @@ cp .git/hooks/pre-commit .git/hooks/pre-commit
 chmod +x .git/hooks/pre-commit
 ```
 
-## 🎯 Coverage Goals
+## 🎯 覆盖率目标
 
-### High Priority Components (Target: 90%+ coverage)
+### 高优先级组件 (目标: 90%+ 覆盖率)
 
-- [x] `src/components/TodoForm.tsx` (currently 100% ✅)
-- [x] `src/components/TodoItem.tsx` (currently 100% ✅)
-- [x] `src/components/TodoList.tsx` (currently 100% ✅)
-- [x] `src/utils/quadrantUtils.ts` (currently 100% ✅)
-- [x] `src/hooks/useTimeValidation.ts` (currently 100% ✅)
+- [x] `src/components/TodoForm.tsx` (当前 100% ✅)
+- [x] `src/components/TodoItem.tsx` (当前 100% ✅)
+- [x] `src/components/TodoList.tsx` (当前 100% ✅)
+- [x] `src/utils/quadrantUtils.ts` (当前 100% ✅)
+- [x] `src/hooks/useTimeValidation.ts` (当前 100% ✅)
+- [ ] `src/components/QuadrantView.tsx` (待编写)
+- [ ] `src/components/MatrixView.tsx` (待编写)
 
-### Medium Priority Components (Target: 80%+ coverage)
+### 中优先级组件 (目标: 80%+ 覆盖率)
 
-- [x] `src/components/Toast.tsx` (currently 100% ✅)
-- [x] `src/components/Modal.tsx` (currently 100% ✅)
-- [x] `src/components/TimeSelector.tsx` (currently 100% ✅)
-- [x] `src/contexts/LoadingContext.tsx` (currently 100% ✅)
-- [x] `src/hooks/useDragLogic.ts` (currently 100% ✅)
+- [x] `src/components/Toast.tsx` (当前 100% ✅)
+- [x] `src/components/Modal.tsx` (当前 100% ✅)
+- [x] `src/components/RecycleBin.tsx` (当前 100% ✅)
+- [ ] `src/components/AppearanceSettings.tsx` (待编写)
+- [ ] `src/components/DashboardView.tsx` (待编写)
 
-### Low Priority Components (Target: 70%+ coverage)
+### 低优先级组件 (目标: 70%+ 覆盖率)
 
-- [x] `src/components/RecycleBin.tsx` (currently 100% ✅)
-- [x] `src/services/api.ts` (currently 100% ✅)
-- [x] `src/App.tsx` (currently 100% ✅)
-- [x] `src/components/PriorityList.tsx` (currently 100% ✅)
-
-## 🚀 Next Steps
-
-1. **Maintain Coverage**:
-   - Ensure new features include comprehensive tests
-   - Keep coverage above 90%
-   - Regularly review test execution time
-
-2. **E2E Testing**:
-   - Expand Playwright test suite for complex user flows
-   - Integrate E2E tests into CI pipeline
-   - Add visual regression testing
-
-3. **Performance Monitoring**:
-   - Add bundle size monitoring
-   - Implement performance budgets
-   - Track Core Web Vitals in CI
-
-4. **Documentation**:
-   - Add component testing guidelines
-   - Create testing best practices document
-   - Document mock data usage patterns
+- [x] `src/components/Icon.tsx` (当前 100% ✅)
+- [ ] `src/components/Sidebar.tsx` (待编写)
+- [ ] `src/components/LoadingOverlay.tsx` (待编写)

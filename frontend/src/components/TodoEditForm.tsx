@@ -64,6 +64,8 @@ const TodoEditForm: React.FC<TodoEditFormProps> = ({
       ) : null}
       <input
         type="text"
+        name="title"
+        id={`edit-title-${todo.id}`}
         value={editTitle}
         onChange={(e) => {
           setEditTitle(e.target.value);
@@ -80,6 +82,8 @@ const TodoEditForm: React.FC<TodoEditFormProps> = ({
         autoFocus
       />
       <textarea
+        name="description"
+        id={`edit-description-${todo.id}`}
         value={editDescription}
         onChange={(e) => {
           setEditDescription(e.target.value);

@@ -5,13 +5,49 @@ import { settingsApi } from '../services/api'
  * 外观与主题设置 Hook
  */
 export function useAppSettings() {
-  const [theme, setTheme] = useState<'light' | 'dark'>('light')
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem('theme') as 'light' | 'dark' | null
+    if (saved) return saved
+    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
+  })
+  
   const [bgImage, setBgImage] = useState<string | null>(null)
   const [isBgLoading, setIsBgLoading] = useState(false)
-  const [bgOpacity, setBgOpacity] = useState(1)
-  const [bgBlur, setBgBlur] = useState(0)
-  const [spotlightType, setSpotlightType] = useState<'glow' | 'flow' | 'focus' | 'none'>('glow')
-  const [autoTrash, setAutoTrash] = useState(false)
+  
+  const [bgOpacity, setBgOpacity] = useState(() => {
+    const saved = localStorage.getItem('bgOpacity')
+    return saved ? parseFloat(saved) : 0.8
+  })
+  
+  const [bgBlur, setBgBlur] = useState(() => {
+    const saved = localStorage.getItem('bgBlur')
+    return saved ? parseInt(saved) : 20
+  })
+  
+  const [spotlightType, setSpotlightType] = useState<'glow' | 'flow' | 'focus' | 'none'>(() => {
+    return (localStorage.getItem('spotlightType') as any) || 'glow'
+  })
+  
+  const [autoTrash, setAutoTrash] = useState(() => {
+    return localStorage.getItem('autoTrash') === 'true'
+  })
+
+  /**
+   * 辅助函数：同步 DOM 状态
+   */
+  const syncDomSettings = useCallback(() => {
+    document.documentElement.setAttribute('data-theme', theme)
+    document.documentElement.style.setProperty('--surface-opacity', bgOpacity.toString())
+    const blurPx = (bgBlur / 100) * 20
+    document.documentElement.style.setProperty('--bg-blur', `${blurPx}px`)
+  }, [theme, bgOpacity, bgBlur])
+
+  // 初始化 DOM 状态
+  useEffect(() => {
+    syncDomSettings()
+    // 壁纸初始化
+    handleBgImageChange()
+  }, []) // 仅在挂载时运行一次
 
   /**
    * 处理自动移入回收站设置变化
@@ -109,41 +145,8 @@ export function useAppSettings() {
     img.src = url
   }, [handleBgOpacityChange])
 
-  // 初始化设置
-  useEffect(() => {
-    // 主题
-    const savedTheme = localStorage.getItem('theme') as 'light' | 'dark'
-    if (savedTheme) {
-      handleThemeChange(savedTheme)
-    } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
-      handleThemeChange('dark')
-    }
-
-    // 壁纸
-    handleBgImageChange()
-
-    // 透明度
-    const savedOpacity = localStorage.getItem('bgOpacity')
-    const initialOpacity = savedOpacity ? parseFloat(savedOpacity) : 0.8
-    handleBgOpacityChange(initialOpacity)
-
-    // 模糊度
-    const savedBlur = localStorage.getItem('bgBlur')
-    const initialBlur = savedBlur ? parseInt(savedBlur) : 20
-    handleBgBlurChange(initialBlur)
-
-    // 聚光灯效果
-    const savedSpotlight = localStorage.getItem('spotlightType') as any
-    if (savedSpotlight) {
-      setSpotlightType(savedSpotlight)
-    }
-
-    // 自动移入回收站
-    const savedAutoTrash = localStorage.getItem('autoTrash')
-    if (savedAutoTrash !== null) {
-      setAutoTrash(savedAutoTrash === 'true')
-    }
-  }, [handleThemeChange, handleBgOpacityChange, handleBgBlurChange])
+  // handleBgImageChange 已经在上面的 useEffect 中调用过一次了
+  // 这里不再需要重复的初始化效果
 
   return {
     theme,

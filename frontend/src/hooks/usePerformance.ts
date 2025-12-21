@@ -18,8 +18,10 @@ export function usePerformanceMonitoring(componentName: string) {
     const renderEndTime = performance.now()
     const renderTime = renderEndTime - renderStartTime.current
     
-    // 如果渲染时间超过阈值（例如 16ms），记录警告
-    if (renderTime > 16) {
+    // 如果渲染时间超过阈值（开发模式下 25ms，生产模式下 16ms），记录警告
+    const threshold = process.env.NODE_ENV === 'development' ? 25 : 16;
+    
+    if (renderTime > threshold) {
       const message = `[Performance] ${componentName} 渲染耗时: ${renderTime.toFixed(2)}ms (第 ${renderCount.current} 次渲染)`;
       console.warn(message)
       
@@ -34,7 +36,7 @@ export function usePerformanceMonitoring(componentName: string) {
         `(第 ${renderCount.current} 次渲染)`
       )
     }
-  })
+  }) // 保持无依赖数组，以监控每次渲染。但 renderCount 逻辑已修正。
 
   // 清理函数
   useEffect(() => {
@@ -101,19 +103,13 @@ export function useNetworkMonitoring() {
       const duration = performance.now() - startTime
       requestTimes.current.delete(requestId)
       
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Network] 请求 ${requestId} 耗时: ${duration.toFixed(2)}ms`)
-      }
-
-      // 如果请求耗时超过 2 秒，记录到 Sentry 面包屑
-      if (duration > 2000) {
+      if (duration > 1000) { // 请求超过 1s 记录警告
         Sentry.addBreadcrumb({
           category: 'network',
-          message: `Slow request ${requestId}: ${duration.toFixed(2)}ms`,
+          message: `Slow request: ${requestId} took ${duration.toFixed(2)}ms`,
           level: 'warning',
         });
       }
-      
       return duration
     }
     return 0
@@ -127,23 +123,27 @@ export function useNetworkMonitoring() {
  */
 export function useWebVitals() {
   useEffect(() => {
-    const reportWebVitals = (metric: Metric) => {
-      if (process.env.NODE_ENV === 'development') {
-        console.log(`[Web Vitals] ${metric.name}:`, metric.value);
-      }
+    const reportToSentry = (metric: Metric) => {
+      const { name, value, id } = metric;
       
-      // 可以将这些指标发送到 Sentry 或其他分析服务
       Sentry.addBreadcrumb({
         category: 'web-vitals',
-        message: `${metric.name}: ${metric.value}`,
+        message: `${name}: ${value.toFixed(2)} (id: ${id})`,
         level: 'info',
       });
-    };
 
-    onCLS(reportWebVitals);
-    onINP(reportWebVitals);
-    onLCP(reportWebVitals);
-    onFCP(reportWebVitals);
-    onTTFB(reportWebVitals);
-  }, []);
+      // 如果性能指标较差，直接捕获消息
+      if ((name === 'LCP' && value > 2500) || 
+          (name === 'CLS' && value > 0.1) || 
+          (name === 'INP' && value > 200)) {
+        Sentry.captureMessage(`Poor Web Vital: ${name} = ${value.toFixed(2)}`, 'warning');
+      }
+    }
+
+    onCLS(reportToSentry)
+    onINP(reportToSentry)
+    onLCP(reportToSentry)
+    onFCP(reportToSentry)
+    onTTFB(reportToSentry)
+  }, [])
 }

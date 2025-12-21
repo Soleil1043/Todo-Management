@@ -50,6 +50,16 @@
 | created_at | DATETIME | 原始创建时间 |
 | deleted_at | DATETIME | 删除时间，自动设置 |
 
+#### 3. system_settings - 系统设置表
+
+| 字段 | 类型 | 说明 |
+| :--- | :--- | :--- |
+| key | VARCHAR(50) | 设置键，主键，索引 |
+| value | VARCHAR(500) | 字符串值，可选 |
+| blob_value | BLOB | 二进制数据（如自定义壁纸），可选 |
+| content_type | VARCHAR(100) | 内容类型（如 image/png），可选 |
+| updated_at | DATETIME | 更新时间，自动维护 |
+
 ## 核心功能
 
 ### 1. 抽象存储架构
@@ -94,6 +104,9 @@ TodoService -> DatabaseTodoStorage -> SQLAlchemy -> SQLite
 | DELETE | `/api/recycle-bin/{id}` | 永久删除回收站记录 |
 | DELETE | `/api/recycle-bin` | 清空回收站表 |
 | GET | `/api/stats` | 统计查询 |
+| GET | `/api/settings/{key}` | 获取指定系统设置 |
+| POST | `/api/settings` | 保存/更新系统设置 |
+| DELETE | `/api/settings/{key}` | 删除指定系统设置 |
 
 ### 5. 软删除和回收站机制
 

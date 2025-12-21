@@ -20,7 +20,7 @@ const AppHeader: React.FC<AppHeaderProps> = ({ title, icon }) => {
       
       <div className="header-actions">
         <a 
-          href="https://github.com/Soleil1043/Todo-Management" 
+          href="https://github.com/Soleil1043/TodoGravita" 
           target="_blank" 
           rel="noopener noreferrer"
           className="github-link"

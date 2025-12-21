@@ -120,6 +120,8 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
             <div className="wallpaper-actions">
               <input
                 type="file"
+                name="wallpaper-upload"
+                id="wallpaper-upload"
                 ref={fileInputRef}
                 onChange={handleFileUpload}
                 accept="image/*"
@@ -154,6 +156,8 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
           <div className="range-control">
             <input
               type="range"
+              name="bgOpacity"
+              id="settings-bg-opacity"
               className="range-input"
               min="0.1"
               max="1"
@@ -170,6 +174,8 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
           <div className="range-control">
             <input
               type="range"
+              name="bgBlur"
+              id="settings-bg-blur"
               className="range-input"
               min="0"
               max="100"
@@ -219,6 +225,8 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
             <label className="switch">
               <input
                 type="checkbox"
+                name="autoTrash"
+                id="settings-auto-trash"
                 checked={autoTrash}
                 onChange={(e) => handleAutoTrashChange(e.target.checked)}
               />

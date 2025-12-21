@@ -113,6 +113,8 @@ const TodoItem: React.FC<TodoItemProps> = ({
           <div className="todo-checkbox-container" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
             <input
               type="checkbox"
+              name={`todo-complete-${todo.id}`}
+              id={`todo-complete-${todo.id}`}
               checked={todo.completed}
               onChange={(e) => {
                 e.preventDefault()

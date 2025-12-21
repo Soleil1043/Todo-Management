@@ -1,11 +1,11 @@
-# 🎨 Todo Management Frontend
+# TodoGravita Frontend
 
 [![React](https://img.shields.io/badge/React-18-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)](https://reactjs.org/)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5-007ACC?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
 [![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
 [![Axios](https://img.shields.io/badge/Axios-1.6-5A29E4?style=for-the-badge&logo=axios&logoColor=white)](https://axios-http.com/)
 
-现代化的React + TypeScript前端应用，为Todo Management系统提供完整的用户界面和交互体验。
+现代化的React + TypeScript前端应用，为TodoGravita系统提供完整的用户界面和交互体验。
 
 ## ✨ 核心功能
 
@@ -14,8 +14,14 @@
 - ✅ **创建待办事项** - 支持标题、描述、评分和时间规划
 - ✅ **编辑功能** - 实时编辑标题、描述、分值、时间信息
 - ✅ **状态管理** - 标记完成/未完成状态
-- ✅ **四象限系统** - 基于未来价值和紧急程度的智能象限视图
+- ✅ **多视图系统** - 支持 Dashboard、Matrix 和 Quadrant 三种专业视图
 - ✅ **时间规划** - 开始时间和结束时间选择
+
+### 🎨 个性化与设置
+
+- ✅ **外观设置** - 支持自定义壁纸上传、模糊度调节和遮罩设置
+- ✅ **主题系统** - 支持多种主题颜色切换
+- ✅ **响应式侧边栏** - 便捷的视图导航和系统设置入口
 
 ### 🗂️ 回收站系统
 
@@ -46,7 +52,8 @@
 - **TypeScript** - 类型安全的 JavaScript，提升开发体验
 - **Vite** - 极速的前端构建工具
 - **Axios** - 强大的 HTTP 客户端
-- **CSS3** - 现代化样式和动画
+- **Sentry** - 实时错误监控和性能分析
+- **CSS3** - 现代化样式和动画 (基于 CSS Variables 的设计系统)
 
 ### 项目结构
 
@@ -54,40 +61,35 @@
 frontend/
 ├── 📁 源代码
 │   └── src/
-│       ├── 📁 组件层
-│       │   ├── TodoForm.tsx      # 添加待办事项表单组件
-│       │   ├── TodoList.tsx      # 待办事项列表容器组件
-│       │   ├── TodoItem.tsx      # 单个待办事项展示组件
-│       │   ├── TimeSelector.tsx  # 时间选择下拉组件
-│       │   └── RecycleBin.tsx    # 回收站管理模态框
-│       ├── 📁 服务层
-│       │   └── api.ts           # Axios API 服务封装
-│       ├── 📁 类型定义
-│       │   └── todo.ts          # TypeScript 接口定义
-│       ├── 📁 样式
-│       │   ├── App.css          # 主应用样式文件
-│       │   └── index.css        # 全局样式文件
-│       ├── App.tsx              # 主应用组件和状态管理
-│       └── main.tsx             # React 应用入口文件
+│       ├── 📁 components/      # 视图和功能组件 (Dashboard, Matrix, Quadrant等)
+│       ├── 📁 contexts/        # React Context (Settings, Todo, Loading)
+│       ├── 📁 hooks/           # 自定义 Hooks (useAppSettings, useAppTodos等)
+│       ├── 📁 services/        # API 服务封装 (Axios 实例)
+│       ├── 📁 config/          # 全局配置 (Sentry, Performance)
+│       ├── 📁 types/           # TypeScript 接口定义
+│       ├── 📁 styles/          # 模块化 CSS 样式
+│       ├── 📁 utils/           # 工具函数 (象限算法等)
+│       ├── App.tsx             # 根组件 (视图切换和基础布局)
+│       └── main.tsx            # 应用入口
 ├── 📁 配置文件
-│   ├── vite.config.ts          # Vite 构建和开发配置
-│   ├── tsconfig.json           # TypeScript 编译配置
-│   ├── tsconfig.node.json      # Node 端 TypeScript 配置
-│   └── package.json            # 项目依赖和脚本
-└── 📖 README.md                # 前端开发文档
+│   ├── vite.config.ts          # Vite 构建配置
+│   ├── tsconfig.json           # TypeScript 配置
+│   └── package.json            # 项目依赖
+└── 📖 README.md                # 本文档
 ```
 
 ### 组件架构
 
 ```text
 App (主应用)
-├── Header (头部统计和操作)
-├── TodoForm (添加表单)
-├── TodoList (列表容器)
-│   └── TodoItem (单个事项)
-│       ├── 显示模式
-│       └── 编辑模式
-└── RecycleBin (回收站模态框)
+├── Sidebar (侧边栏导航)
+├── MainContent (主内容区域)
+│   ├── DashboardView (仪表盘视图)
+│   ├── MatrixView (矩阵视图) 
+│   └── QuadrantView (四象限视图)
+├── AppearanceSettings (外观设置模态框)
+├── RecycleBin (回收站模态框)
+└── Toast (全局提示)
 ```
 
 ## 🚀 快速开始
@@ -579,7 +581,7 @@ VITE_API_BASE_URL=https://api.yourdomain.com/api
 - [ ] **用户系统** - 登录注册和个人化
 - [ ] **数据同步** - 云端数据同步
 - [ ] **离线支持** - PWA离线功能
-- [ ] **主题系统** - 深色模式和主题切换
+- ✅ **主题系统** - 深色模式和主题切换
 - [ ] **国际化** - 多语言支持
 - [ ] **键盘快捷键** - 高效操作支持
 
@@ -587,9 +589,10 @@ VITE_API_BASE_URL=https://api.yourdomain.com/api
 
 - [ ] **状态管理** - Redux Toolkit或Zustand
 - [ ] **UI框架** - 集成Ant Design或Material-UI
-- [ ] **图表展示** - 数据可视化图表
+- ✅ **图表展示** - 数据可视化图表 (Dashboard 视图)
 - [ ] **动画系统** - Framer Motion动画
-- [ ] **测试覆盖** - 完整的测试体系
+- ✅ **测试覆盖** - 完整的测试体系 (Vitest + React Testing Library)
+- ✅ **监控系统** - Sentry 实时监控集成
 
 ## 🤝 贡献指南
 
