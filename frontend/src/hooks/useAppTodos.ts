@@ -1,4 +1,4 @@
-import { useState, useCallback, useMemo } from 'react'
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react'
 import { TodoSchema, TodoFormData } from '../types/todo'
 import { todoApi, recordToArray } from '../services/api'
 import { useToast } from '../components/Toast'
@@ -9,6 +9,13 @@ import { useLoading } from '../contexts/LoadingContext'
  */
 export function useAppTodos(autoTrash: boolean = false) {
   const [todos, setTodos] = useState<TodoSchema[]>([])
+  const todosRef = useRef<TodoSchema[]>(todos)
+
+  // 同步 todos 到 ref，以便在 useCallback 中使用而不增加依赖
+  useEffect(() => {
+    todosRef.current = todos
+  }, [todos])
+
   const { showToast } = useToast()
   const { setLoading } = useLoading()
 
@@ -52,33 +59,21 @@ export function useAppTodos(autoTrash: boolean = false) {
    * 切换完成状态
    */
   const handleToggleComplete = useCallback(async (id: number) => {
-    // 乐观更新：先在本地更新状态
-    setTodos(prevTodos =>
-      prevTodos.map(todo =>
-        todo.id === id ? { ...todo, completed: !todo.completed } : todo
-      )
-    )
-
-    // 获取当前待办的状态（更新前的状态，因为上面的 setTodos 是异步的，这里拿到的还是旧的）
-    // 但我们需要知道更新后的状态。上面的 setTodos 还没有生效。
-    // 我们可以直接从 todos 中找，然后取反。
-    const currentTodo = todos.find(t => t.id === id)
+    // 获取当前待办的状态
+    const currentTodo = todosRef.current.find(t => t.id === id)
     if (!currentTodo) return
 
     const newCompletedStatus = !currentTodo.completed
 
+    // 乐观更新：先在本地更新状态
+    setTodos(prevTodos =>
+      prevTodos.map(todo =>
+        todo.id === id ? { ...todo, completed: newCompletedStatus } : todo
+      )
+    )
+
     // 如果开启了自动移入回收站，且新状态是完成，则直接移入回收站
     if (autoTrash && newCompletedStatus) {
-      // 恢复乐观更新（因为我们要执行删除操作了，不需要显示为完成）
-      // 或者，也许我们应该让它显示为完成然后消失？
-      // handleDeleteTodo 会从列表中移除它。
-      // 所以我们只需要调用 handleDeleteTodo。
-      // 但我们需要撤销上面的乐观更新吗？如果不撤销，它会在列表中显示为完成一瞬间然后消失。
-      // 如果撤销，它会保持未完成状态然后消失。
-      // 这里的逻辑有点微妙。handleDeleteTodo 会更新 todos 移除该项。
-      // 所以上面的 optimistic update 会被覆盖。
-      
-      // 直接调用删除逻辑
       try {
         await todoApi.deleteTodo(id)
         setTodos(prevTodos => prevTodos.filter(todo => todo.id !== id))
@@ -87,7 +82,7 @@ export function useAppTodos(autoTrash: boolean = false) {
         // 如果删除失败，我们需要恢复状态
         setTodos(prevTodos =>
           prevTodos.map(todo =>
-            todo.id === id ? { ...todo, completed: false } : todo
+            todo.id === id ? { ...todo, completed: !newCompletedStatus } : todo
           )
         )
         const errorMessage = err instanceof Error ? err.message : '操作失败'
@@ -108,14 +103,14 @@ export function useAppTodos(autoTrash: boolean = false) {
       // 回滚
       setTodos(prevTodos =>
         prevTodos.map(todo =>
-          todo.id === id ? { ...todo, completed: !todo.completed } : todo
+          todo.id === id ? { ...todo, completed: !newCompletedStatus } : todo
         )
       )
       const errorMessage = err instanceof Error ? err.message : '更新状态失败'
       showToast(errorMessage, 'error')
       console.error('Error toggling status:', err)
     }
-  }, [todos, autoTrash, showToast])
+  }, [autoTrash, showToast])
 
   /**
    * 删除待办事项（移至回收站）
@@ -136,7 +131,7 @@ export function useAppTodos(autoTrash: boolean = false) {
    * 更新待办事项
    */
   const handleUpdateTodo = useCallback(async (id: number, title: string, description: string, future_score?: number, urgency_score?: number, start_time?: string, end_time?: string) => {
-    let previousTodos: TodoSchema[] = [];
+    let previousTodos: TodoSchema[] = todosRef.current;
     
     try {
       setTodos(prevTodos => {
@@ -178,7 +173,7 @@ export function useAppTodos(autoTrash: boolean = false) {
    */
   const handleUpdateTodoWithScores = useCallback(async (updatedTodo: TodoSchema) => {
     // 保存旧状态以便回滚
-    let previousTodos: TodoSchema[] = [];
+    let previousTodos: TodoSchema[] = todosRef.current;
     
     try {
       setTodos(prevTodos => {
@@ -215,24 +210,57 @@ export function useAppTodos(autoTrash: boolean = false) {
       const errorMessage = err instanceof Error ? err.message : '更新待办事项失败'
       showToast(errorMessage, 'error')
       console.error('Error updating todo:', err)
-      
-      // 只有在极端情况下才重新加载全部
-      // loadTodos() 
     }
   }, [showToast]) // 移除对 loadTodos 的依赖
 
   /**
    * 恢复待办事项（从回收站）
    */
-  const handleRestoreTodo = useCallback((todo: TodoSchema) => {
-    setTodos(prevTodos => {
-      const exists = prevTodos.some(t => t.id === todo.id)
-      if (exists) {
-        return prevTodos.map(t => (t.id === todo.id ? todo : t))
-      }
-      return [...prevTodos, todo]
-    })
-  }, [])
+  const handleRestoreTodo = useCallback(async (id: number) => {
+    try {
+      const restoredTodo = await todoApi.restoreTodo(id)
+      setTodos(prevTodos => {
+        const exists = prevTodos.some(t => t.id === id)
+        if (exists) {
+          return prevTodos.map(t => (t.id === id ? restoredTodo : t))
+        }
+        return [...prevTodos, restoredTodo]
+      })
+      showToast('已恢复待办事项', 'success')
+      return restoredTodo
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '恢复失败'
+      showToast(errorMessage, 'error')
+      throw err
+    }
+  }, [showToast])
+
+  /**
+   * 批量恢复待办事项
+   */
+  const handleBatchRestore = useCallback(async (ids: number[]) => {
+    try {
+      const result = await todoApi.batchRestoreTodos(ids)
+      setTodos(prevTodos => {
+        const newTodos = [...prevTodos]
+        result.restored_todos.forEach(todo => {
+          const index = newTodos.findIndex(t => t.id === todo.id)
+          if (index !== -1) {
+            newTodos[index] = todo
+          } else {
+            newTodos.push(todo)
+          }
+        })
+        return newTodos
+      })
+      showToast(`已恢复 ${result.restored_todos.length} 个待办事项`, 'success')
+      return result.restored_todos
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : '恢复失败'
+      showToast(errorMessage, 'error')
+      throw err
+    }
+  }, [showToast])
 
   // 统计数据
   const completedCount = useMemo(() =>
@@ -240,7 +268,7 @@ export function useAppTodos(autoTrash: boolean = false) {
     [todos]
   )
   
-  const totalCount = useMemo(() => todos.length, [todos])
+  const totalCount = todos.length
 
   return {
     todos,
@@ -251,6 +279,7 @@ export function useAppTodos(autoTrash: boolean = false) {
     handleUpdateTodo,
     handleUpdateTodoWithScores,
     handleRestoreTodo,
+    handleBatchRestore,
     completedCount,
     totalCount
   }

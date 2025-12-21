@@ -41,4 +41,4 @@ const AppHeader: React.FC<AppHeaderProps> = ({ title, icon }) => {
   )
 }
 
-export default AppHeader
+export default React.memo(AppHeader)

@@ -6,24 +6,20 @@ import Modal from './Modal'
 import { useToast } from './Toast'
 import RecycledTodoItem from './RecycledTodoItem'
 import { useLoading } from '../contexts/LoadingContext'
+import { useTodoActions } from '../contexts/TodoContext'
 
 interface RecycleBinProps {
   isOpen: boolean
   onClose: () => void
-  onRestore: (todo: TodoSchema) => void
-  onPermanentlyDelete: (id: number) => void
-  onClearBin: () => void
 }
 
 const RecycleBin: React.FC<RecycleBinProps> = ({
   isOpen,
   onClose,
-  onRestore,
-  onPermanentlyDelete,
-  onClearBin,
 }) => {
   const [recycledTodos, setRecycledTodos] = useState<TodoSchema[]>([])
   const { isLoading: loading, setLoading } = useLoading()
+  const { handleRestoreTodo, handleBatchRestore } = useTodoActions()
   const [confirmAction, setConfirmAction] = useState<
     | null
     | { kind: 'permanentDelete'; id: number }
@@ -44,7 +40,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
     } finally {
       setLoading(false)
     }
-  }, [showToast])
+  }, [showToast, setLoading])
 
   useEffect(() => {
     if (isOpen) {
@@ -59,14 +55,12 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
         return
       }
       
-      await todoApi.restoreTodo(todo.id)
+      await handleRestoreTodo(todo.id)
       setRecycledTodos(prev => prev.filter(t => t.id !== todo.id))
-      onRestore(todo)
-      showToast('已恢复待办事项', 'success')
     } catch (error) {
-      showToast('恢复失败，请重试', 'error')
+      // Error already handled by context/toast
     }
-  }, [onRestore, showToast])
+  }, [handleRestoreTodo, showToast])
 
   const requestPermanentDelete = useCallback((id: number) => {
     setConfirmAction({ kind: 'permanentDelete', id })
@@ -99,22 +93,18 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
       if (confirmAction.kind === 'permanentDelete') {
         await todoApi.permanentlyDeleteTodo(confirmAction.id)
         setRecycledTodos(prev => prev.filter(t => t.id !== confirmAction.id))
-        onPermanentlyDelete(confirmAction.id)
         showToast('已永久删除', 'success')
       }
 
       if (confirmAction.kind === 'clearBin') {
         await todoApi.clearRecycleBin()
         setRecycledTodos([])
-        onClearBin()
         showToast('垃圾桶已清空', 'success')
       }
 
       if (confirmAction.kind === 'batchRestore') {
-        const result = await todoApi.batchRestoreTodos(confirmAction.ids)
+        await handleBatchRestore(confirmAction.ids)
         setRecycledTodos([])
-        result.restored_todos.forEach(todo => onRestore(todo))
-        showToast(`已恢复 ${result.restored_todos.length} 个待办事项`, 'success')
       }
 
       setConfirmAction(null)
@@ -124,7 +114,7 @@ const RecycleBin: React.FC<RecycleBinProps> = ({
     } finally {
       setLoading(false)
     }
-  }, [confirmAction, onClearBin, onPermanentlyDelete, onRestore, showToast])
+  }, [confirmAction, handleBatchRestore, setLoading, showToast])
 
   const footer = (
     <>

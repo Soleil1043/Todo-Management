@@ -4,6 +4,8 @@ import App from './App.tsx'
 import './index.css'
 import { ToastProvider } from './components/Toast'
 import { LoadingProvider } from './contexts/LoadingContext'
+import { SettingsProvider } from './contexts/SettingsContext'
+import { TodoProvider } from './contexts/TodoContext'
 import ErrorBoundary from './components/ErrorBoundary'
 import { initSentry } from './config/sentry'
 
@@ -13,11 +15,15 @@ initSentry();
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ErrorBoundary>
-      <LoadingProvider>
-        <ToastProvider>
-          <App />
-        </ToastProvider>
-      </LoadingProvider>
+      <ToastProvider>
+        <LoadingProvider>
+          <SettingsProvider>
+            <TodoProvider>
+              <App />
+            </TodoProvider>
+          </SettingsProvider>
+        </LoadingProvider>
+      </ToastProvider>
     </ErrorBoundary>
   </React.StrictMode>,
 )

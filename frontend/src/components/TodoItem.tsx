@@ -1,17 +1,16 @@
-import React, { useState, useCallback, useMemo } from 'react'
+import React, { useCallback, useMemo } from 'react'
 import { useDraggable } from '@dnd-kit/core'
 import { CSS } from '@dnd-kit/utilities'
 import { TodoSchema } from '../types/todo'
-import TimeSelector from './TimeSelector'
-import { useTimeValidation } from '../hooks/useTimeValidation'
 import Icon from './Icon'
+import TodoEditForm from './TodoEditForm'
 
 interface TodoItemProps {
   todo: TodoSchema
   isEditing: boolean
   onToggleComplete: (id: number) => void
   onDelete: (id: number) => void
-  onStartEdit: () => void
+  onStartEdit: (id: number) => void
   onCancelEdit: () => void
   onUpdate: (id: number, title: string, description: string, future_score?: number, urgency_score?: number, start_time?: string, end_time?: string) => void
 }
@@ -25,14 +24,6 @@ const TodoItem: React.FC<TodoItemProps> = ({
   onCancelEdit,
   onUpdate,
 }) => {
-  const [editTitle, setEditTitle] = useState(todo.title)
-  const [editDescription, setEditDescription] = useState(todo.description || '')
-  const [editFutureScore, setEditFutureScore] = useState<number | undefined>(todo.future_score)
-  const [editUrgencyScore, setEditUrgencyScore] = useState<number | undefined>(todo.urgency_score)
-  const [editStartTime, setEditStartTime] = useState(todo.start_time || '')
-  const [editEndTime, setEditEndTime] = useState(todo.end_time || '')
-  const { error: editError, setError: setEditError, validateTime } = useTimeValidation()
-
   // 拖拽功能 - 完全禁用拖拽监听器当处于编辑模式
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: todo.id!.toString(),
@@ -53,55 +44,17 @@ const TodoItem: React.FC<TodoItemProps> = ({
     opacity: isDragging ? 0.5 : 1,
   }
 
-  // 当todo数据变化时更新编辑状态
-  React.useEffect(() => {
-    if (!isEditing) {
-      setEditTitle(todo.title)
-      setEditDescription(todo.description || '')
-      setEditFutureScore(todo.future_score)
-      setEditUrgencyScore(todo.urgency_score)
-      setEditStartTime(todo.start_time || '')
-      setEditEndTime(todo.end_time || '')
-    }
-  }, [todo, isEditing])
-
-  const handleSave = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    
-    // 输入验证
-    const trimmedTitle = editTitle.trim()
-    if (!trimmedTitle) {
-      setEditError('标题不能为空')
-      return
-    }
-    
-    // 时间格式验证 - 使用自定义 Hook
-    if (!validateTime(editStartTime, editEndTime)) {
-      return
-    }
-    
-    setEditError(null)
-    
-    // 确保分数值正确处理
-    const futureScore = editFutureScore === undefined ? undefined : Number(editFutureScore)
-    const urgencyScore = editUrgencyScore === undefined ? undefined : Number(editUrgencyScore)
-    
-    onUpdate(todo.id!, trimmedTitle, editDescription.trim(), futureScore, urgencyScore, editStartTime, editEndTime)
-  }, [editTitle, editDescription, editFutureScore, editUrgencyScore, editStartTime, editEndTime, onUpdate, todo.id, validateTime, setEditError])
-
-  const handleCancel = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setEditTitle(todo.title)
-    setEditDescription(todo.description || '')
-    setEditFutureScore(todo.future_score)
-    setEditUrgencyScore(todo.urgency_score)
-    setEditStartTime(todo.start_time || '')
-    setEditEndTime(todo.end_time || '')
-    setEditError(null)
-    onCancelEdit()
-  }, [todo, setEditError, onCancelEdit])
+  const handleSave = useCallback((updatedTodo: TodoSchema) => {
+    onUpdate(
+      updatedTodo.id!,
+      updatedTodo.title,
+      updatedTodo.description || '',
+      updatedTodo.future_score,
+      updatedTodo.urgency_score,
+      updatedTodo.start_time,
+      updatedTodo.end_time
+    )
+  }, [onUpdate])
 
   // 使用useMemo缓存四象限分类 - 优化依赖项
   const quadrantInfo = useMemo(() => {
@@ -139,7 +92,6 @@ const TodoItem: React.FC<TodoItemProps> = ({
     return parts.join('')
   }, [todo.start_time, todo.end_time])
 
-
   return (
     <div
       ref={setNodeRef}
@@ -151,73 +103,11 @@ const TodoItem: React.FC<TodoItemProps> = ({
       onPointerDown={handleEditModeInteraction}
     >
       {isEditing ? (
-        <div className="todo-edit" onClick={(e) => e.stopPropagation()} onPointerDown={(e) => e.stopPropagation()} onMouseDown={(e) => e.stopPropagation()}>
-          {editError ? (
-            <div className="form-error" role="alert" aria-live="polite">
-              {editError}
-            </div>
-          ) : null}
-          <input
-            type="text"
-            value={editTitle}
-            onChange={(e) => {
-              setEditTitle(e.target.value)
-              setEditError(null)
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSave(e)
-              if (e.key === 'Escape') handleCancel(e)
-            }}
-            className="edit-input"
-            placeholder="标题"
-            maxLength={100}
-            aria-label="编辑标题"
-            autoFocus
-          />
-          <textarea
-            value={editDescription}
-            onChange={(e) => {
-              setEditDescription(e.target.value)
-              setEditError(null)
-            }}
-            className="edit-textarea"
-            placeholder="描述（可选）"
-            rows={3}
-            maxLength={500}
-            aria-label="编辑描述"
-          />
-          <div className="form-row">
-            <TimeSelector
-              label="开始时间"
-              value={editStartTime}
-              onChange={(value) => {
-                setEditStartTime(value)
-                setEditError(null)
-              }}
-            />
-            <TimeSelector
-              label="结束时间"
-              value={editEndTime}
-              onChange={(value) => {
-                setEditEndTime(value)
-                setEditError(null)
-              }}
-            />
-          </div>
-          <div className="edit-actions">
-            <button type="button" onClick={handleCancel} className="btn-cancel">
-              取消
-            </button>
-            <button 
-            type="button" 
-            onClick={handleSave} 
-            className="btn-save"
-            disabled={isDragging}
-          >
-            保存
-          </button>
-          </div>
-        </div>
+        <TodoEditForm
+          todo={todo}
+          onSave={handleSave}
+          onCancel={onCancelEdit}
+        />
       ) : (
         <>
           <div className="todo-checkbox-container" onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}>
@@ -248,25 +138,31 @@ const TodoItem: React.FC<TodoItemProps> = ({
                   <span>{timeDisplay}</span>
                 </div>
               )}
+              {quadrantInfo && (
+                <div className={`meta-item ${quadrantInfo.class}`}>
+                  <Icon name="tag" size={14} />
+                  <span>{quadrantInfo.text}</span>
+                </div>
+              )}
               {todo.completed && <span className="completed-badge">已完成</span>}
             </div>
           </div>
 
           <div className="todo-actions">
-            <button 
-              className="btn-edit" 
+            <button
+              className="btn-edit"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()
-                onStartEdit()
+                onStartEdit(todo.id!)
               }}
               title="编辑"
               disabled={isDragging}
             >
               <Icon name="edit" size={18} />
             </button>
-            <button 
-              className="btn-delete" 
+            <button
+              className="btn-delete"
               onClick={(e) => {
                 e.preventDefault()
                 e.stopPropagation()

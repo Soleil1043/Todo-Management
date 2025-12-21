@@ -1,49 +1,34 @@
 import React from 'react';
 import { TodoSchema } from '../types/todo';
 import Icon from './Icon';
-import TodoEditForm from './TodoEditForm';
+import PriorityItem from './PriorityItem';
+import { useTodoActions } from '../contexts/TodoContext';
 
 interface PriorityListProps {
   todos: TodoSchema[];
   editingTodoId: number | null;
-  editTitle: string;
-  editDescription: string;
-  editStartTime: string;
-  editEndTime: string;
-  editError: string | null;
-  onToggleComplete: (id: number) => void;
-  onDeleteTodo: (id: number) => void;
   handlePriorityEditStart: (todo: TodoSchema) => void;
-  handlePriorityEditCancel: (e: React.MouseEvent, todo: TodoSchema) => void;
-  handlePriorityEditSave: (e: React.MouseEvent, todo: TodoSchema) => void;
-  setEditTitle: (value: string) => void;
-  setEditDescription: (value: string) => void;
-  setEditStartTime: (value: string) => void;
-  setEditEndTime: (value: string) => void;
-  setEditError: (value: string | null) => void;
+  handlePriorityEditCancel: () => void;
+  handlePriorityEditSave: (todo: TodoSchema) => void;
   spotlightType: 'glow' | 'flow' | 'focus' | 'none';
+  onHoverTodo: (id: number, x: number, y: number) => void;
+  onLeaveTodo: () => void;
+  hoveredTodoId: number | null;
 }
 
 const PriorityList: React.FC<PriorityListProps> = ({
   todos,
   editingTodoId,
-  editTitle,
-  editDescription,
-  editStartTime,
-  editEndTime,
-  editError,
-  onToggleComplete,
-  onDeleteTodo,
   handlePriorityEditStart,
   handlePriorityEditCancel,
   handlePriorityEditSave,
-  setEditTitle,
-  setEditDescription,
-  setEditStartTime,
-  setEditEndTime,
-  setEditError,
   spotlightType,
+  onHoverTodo,
+  onLeaveTodo,
+  hoveredTodoId,
 }) => {
+  const { handleToggleComplete, handleDeleteTodo } = useTodoActions();
+
   return (
     <div className="priority-list">
       <div className="priority-list-header">
@@ -55,93 +40,21 @@ const PriorityList: React.FC<PriorityListProps> = ({
       </div>
       <div className="priority-list-content">
         {todos.map((todo, index) => (
-          <div
+          <PriorityItem
             key={todo.id}
-            className={`priority-item ${todo.completed ? 'completed' : ''} ${editingTodoId === todo.id ? 'editing' : ''} ${index === 0 && !todo.completed ? `spotlight-${spotlightType}` : ''}`}
-          >
-            <div
-              className="todo-checkbox-container"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-              }}
-            >
-              <input
-                type="checkbox"
-                checked={!!todo.completed}
-                onChange={(e) => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  if (todo.id) onToggleComplete(todo.id);
-                }}
-                className="todo-checkbox"
-                aria-label={`${todo.completed ? '取消完成' : '标记完成'}：${todo.title}`}
-              />
-            </div>
-            {editingTodoId === todo.id ? (
-              <TodoEditForm
-                todo={todo}
-                editTitle={editTitle}
-                editDescription={editDescription}
-                editStartTime={editStartTime}
-                editEndTime={editEndTime}
-                editError={editError}
-                setEditTitle={setEditTitle}
-                setEditDescription={setEditDescription}
-                setEditStartTime={setEditStartTime}
-                setEditEndTime={setEditEndTime}
-                setEditError={setEditError}
-                onSave={handlePriorityEditSave}
-                onCancel={handlePriorityEditCancel}
-              />
-            ) : (
-              <>
-                <div className="priority-item-content">
-                  <div className="priority-item-title">{todo.title}</div>
-                  {todo.description && (
-                    <p className="todo-description">{todo.description}</p>
-                  )}
-                  <div className="priority-item-meta">
-                    {(todo.start_time || todo.end_time) && (
-                      <div className="meta-item">
-                        <Icon name="clock" size={14} />
-                        <span>
-                          {todo.start_time && `${todo.start_time}`}
-                          {todo.start_time && todo.end_time && ' - '}
-                          {todo.end_time && `${todo.end_time}`}
-                        </span>
-                      </div>
-                    )}
-                    {todo.completed && <span className="completed-badge">已完成</span>}
-                  </div>
-                </div>
-                <div className="todo-actions">
-                  <button
-                    className="btn-edit"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handlePriorityEditStart(todo);
-                    }}
-                    title="编辑"
-                  >
-                    <Icon name="edit" size={18} />
-                  </button>
-                  <button
-                    className="btn-delete"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      if (todo.id) onDeleteTodo(todo.id);
-                    }}
-                    title="删除"
-                  >
-                    <Icon name="trash" size={18} />
-                  </button>
-                </div>
-              </>
-            )}
-          </div>
+            todo={todo}
+            index={index}
+            editingTodoId={editingTodoId}
+            onToggleComplete={handleToggleComplete}
+            onDeleteTodo={handleDeleteTodo}
+            handlePriorityEditStart={handlePriorityEditStart}
+            handlePriorityEditCancel={handlePriorityEditCancel}
+            handlePriorityEditSave={handlePriorityEditSave}
+            spotlightType={spotlightType}
+            onHoverTodo={onHoverTodo}
+            onLeaveTodo={onLeaveTodo}
+            hoveredTodoId={hoveredTodoId}
+          />
         ))}
         {todos.length === 0 && (
           <div className="priority-list-empty">
@@ -154,4 +67,4 @@ const PriorityList: React.FC<PriorityListProps> = ({
   );
 };
 
-export default PriorityList;
+export default React.memo(PriorityList);

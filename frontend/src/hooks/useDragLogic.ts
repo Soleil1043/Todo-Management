@@ -37,12 +37,13 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
     
     if (canvasRef.current) {
       const rect = canvasRef.current.getBoundingClientRect();
-      const x = clientX - rect.left;
-      const y = clientY - rect.top;
-      setLocalDragPos({ x, y });
+      const xPercent = ((clientX - rect.left) / rect.width) * 100;
+      const yPercent = ((clientY - rect.top) / rect.height) * 100;
       
-      const urgencyScore = positionToScore((x / rect.width) * 100);
-      const futureScore = positionToScore(((rect.height - y) / rect.height) * 100);
+      setLocalDragPos({ x: xPercent, y: yPercent });
+      
+      const urgencyScore = positionToScore(xPercent);
+      const futureScore = positionToScore(100 - yPercent);
       setPreviewScores({ x: urgencyScore, y: futureScore });
     }
   }, [canvasRef, setSelectedTodoId]);
@@ -59,13 +60,13 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
         if (!draggingTodo || !canvasRef.current) return;
         
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+        const xPercent = Math.max(0, Math.min(((clientX - rect.left) / rect.width) * 100, 100));
+        const yPercent = Math.max(0, Math.min(((clientY - rect.top) / rect.height) * 100, 100));
         
-        setLocalDragPos({ x, y });
+        setLocalDragPos({ x: xPercent, y: yPercent });
         
-        const urgencyScore = positionToScore((x / rect.width) * 100);
-        const futureScore = positionToScore(((rect.height - y) / rect.height) * 100);
+        const urgencyScore = positionToScore(xPercent);
+        const futureScore = positionToScore(100 - yPercent);
         setPreviewScores({ x: urgencyScore, y: futureScore });
       });
     },
@@ -73,10 +74,9 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
   );
 
   const handleMouseUp = useCallback(() => {
-    if (draggingTodo && localDragPos && canvasRef.current) {
-      const rect = canvasRef.current.getBoundingClientRect();
-      const urgencyScore = positionToScore((localDragPos.x / rect.width) * 100);
-      const futureScore = positionToScore(((rect.height - localDragPos.y) / rect.height) * 100);
+    if (draggingTodo && localDragPos) {
+      const urgencyScore = positionToScore(localDragPos.x);
+      const futureScore = positionToScore(100 - localDragPos.y);
 
       const currentTodo = todos.find(t => t.id === draggingTodo.id);
       
@@ -106,12 +106,13 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
       
       if (canvasRef.current) {
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
-        setLocalDragPos({ x, y });
+        const xPercent = ((touch.clientX - rect.left) / rect.width) * 100;
+        const yPercent = ((touch.clientY - rect.top) / rect.height) * 100;
         
-        const urgencyScore = positionToScore((x / rect.width) * 100);
-        const futureScore = positionToScore(((rect.height - y) / rect.height) * 100);
+        setLocalDragPos({ x: xPercent, y: yPercent });
+        
+        const urgencyScore = positionToScore(xPercent);
+        const futureScore = positionToScore(100 - yPercent);
         setPreviewScores({ x: urgencyScore, y: futureScore });
       }
     },
@@ -128,12 +129,13 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
       window.requestAnimationFrame(() => {
         if (!draggingTodo || !canvasRef.current) return;
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
-        setLocalDragPos({ x, y });
+        const xPercent = Math.max(0, Math.min(((clientX - rect.left) / rect.width) * 100, 100));
+        const yPercent = Math.max(0, Math.min(((clientY - rect.top) / rect.height) * 100, 100));
         
-        const urgencyScore = positionToScore((x / rect.width) * 100);
-        const futureScore = positionToScore(((rect.height - y) / rect.height) * 100);
+        setLocalDragPos({ x: xPercent, y: yPercent });
+        
+        const urgencyScore = positionToScore(xPercent);
+        const futureScore = positionToScore(100 - yPercent);
         setPreviewScores({ x: urgencyScore, y: futureScore });
       });
     },
@@ -180,11 +182,11 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
 
     if (!baseTodo) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const x = Math.max(0, Math.min(e.clientX - rect.left, rect.width));
-    const y = Math.max(0, Math.min(e.clientY - rect.top, rect.height));
+    const xPercent = Math.max(0, Math.min(((e.clientX - rect.left) / rect.width) * 100, 100));
+    const yPercent = Math.max(0, Math.min(((e.clientY - rect.top) / rect.height) * 100, 100));
 
-    const urgencyScore = positionToScore((x / rect.width) * 100);
-    const futureScore = positionToScore(((rect.height - y) / rect.height) * 100);
+    const urgencyScore = positionToScore(xPercent);
+    const futureScore = positionToScore(100 - yPercent);
 
     onUpdateTodo({
       ...baseTodo,
@@ -205,13 +207,13 @@ export const useDragLogic = ({ canvasRef, todos, onUpdateTodo, setSelectedTodoId
     window.requestAnimationFrame(() => {
       if (canvasRef.current) {
         const rect = canvasRef.current.getBoundingClientRect();
-        const x = Math.max(0, Math.min(clientX - rect.left, rect.width));
-        const y = Math.max(0, Math.min(clientY - rect.top, rect.height));
+        const xPercent = Math.max(0, Math.min(((clientX - rect.left) / rect.width) * 100, 100));
+        const yPercent = Math.max(0, Math.min(((clientY - rect.top) / rect.height) * 100, 100));
         
-        setLocalDragPos({ x, y });
+        setLocalDragPos({ x: xPercent, y: yPercent });
         
-        const urgencyScore = positionToScore((x / rect.width) * 100);
-        const futureScore = positionToScore(((rect.height - y) / rect.height) * 100);
+        const urgencyScore = positionToScore(xPercent);
+        const futureScore = positionToScore(100 - yPercent);
         setPreviewScores({ x: urgencyScore, y: futureScore });
       }
     });

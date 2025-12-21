@@ -1,38 +1,55 @@
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import { TodoSchema } from '../types/todo';
 import TimeSelector from './TimeSelector';
+import { useTimeValidation } from '../hooks/useTimeValidation';
 
 interface TodoEditFormProps {
   todo: TodoSchema;
-  editTitle: string;
-  editDescription: string;
-  editStartTime: string;
-  editEndTime: string;
-  editError: string | null;
-  setEditTitle: (value: string) => void;
-  setEditDescription: (value: string) => void;
-  setEditStartTime: (value: string) => void;
-  setEditEndTime: (value: string) => void;
-  setEditError: (value: string | null) => void;
-  onSave: (e: React.MouseEvent, todo: TodoSchema) => void;
-  onCancel: (e: React.MouseEvent, todo: TodoSchema) => void;
+  onSave: (todo: TodoSchema) => void;
+  onCancel: () => void;
 }
 
 const TodoEditForm: React.FC<TodoEditFormProps> = ({
   todo,
-  editTitle,
-  editDescription,
-  editStartTime,
-  editEndTime,
-  editError,
-  setEditTitle,
-  setEditDescription,
-  setEditStartTime,
-  setEditEndTime,
-  setEditError,
   onSave,
   onCancel
 }) => {
+  const [editTitle, setEditTitle] = useState(todo.title);
+  const [editDescription, setEditDescription] = useState(todo.description || '');
+  const [editStartTime, setEditStartTime] = useState(todo.start_time || '');
+  const [editEndTime, setEditEndTime] = useState(todo.end_time || '');
+  
+  const { error: editError, setError: setEditError, validateTime } = useTimeValidation();
+
+  const handleSave = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    const trimmedTitle = editTitle.trim();
+    if (!trimmedTitle) {
+      setEditError('标题不能为空');
+      return;
+    }
+
+    if (!validateTime(editStartTime, editEndTime)) {
+      return;
+    }
+
+    onSave({
+      ...todo,
+      title: trimmedTitle,
+      description: editDescription.trim(),
+      start_time: editStartTime,
+      end_time: editEndTime,
+    });
+  }, [editTitle, editDescription, editStartTime, editEndTime, onSave, todo, validateTime, setEditError]);
+
+  const handleCancel = useCallback((e: React.MouseEvent | React.KeyboardEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    onCancel();
+  }, [onCancel]);
+
   return (
     <div
       className="todo-edit"
@@ -53,8 +70,8 @@ const TodoEditForm: React.FC<TodoEditFormProps> = ({
           setEditError(null);
         }}
         onKeyDown={(e) => {
-          if (e.key === 'Enter') onSave(e as unknown as React.MouseEvent, todo);
-          if (e.key === 'Escape') onCancel(e as unknown as React.MouseEvent, todo);
+          if (e.key === 'Enter') handleSave(e);
+          if (e.key === 'Escape') handleCancel(e);
         }}
         className="edit-input"
         placeholder="标题"
@@ -95,14 +112,14 @@ const TodoEditForm: React.FC<TodoEditFormProps> = ({
       <div className="edit-actions">
         <button
           type="button"
-          onClick={(e) => onCancel(e, todo)}
+          onClick={handleCancel}
           className="btn-cancel"
         >
           取消
         </button>
         <button
           type="button"
-          onClick={(e) => onSave(e, todo)}
+          onClick={handleSave}
           className="btn-save"
         >
           保存
@@ -112,4 +129,4 @@ const TodoEditForm: React.FC<TodoEditFormProps> = ({
   );
 };
 
-export default TodoEditForm;
+export default React.memo(TodoEditForm);

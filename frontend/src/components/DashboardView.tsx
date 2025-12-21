@@ -1,35 +1,26 @@
 import React from 'react'
 import TodoForm from './TodoForm'
 import TodoList from './TodoList'
-import { TodoSchema, TodoFormData } from '../types/todo'
+import { useTodoState, useTodoActions } from '../contexts/TodoContext'
+import { useLoading } from '../contexts/LoadingContext'
 
-interface DashboardViewProps {
-  loading: boolean
-  todos: TodoSchema[]
-  completedCount: number
-  totalCount: number
-  onAddTodo: (data: TodoFormData) => void
-  onToggleComplete: (id: number) => void
-  onDeleteTodo: (id: number) => void
-  onUpdateTodo: (id: number, title: string, description: string, future_score?: number, urgency_score?: number, start_time?: string, end_time?: string) => void
-}
+const DashboardView: React.FC = () => {
+  const {
+    todos,
+    completedCount,
+    totalCount,
+  } = useTodoState()
+  
+  const { handleAddTodo } = useTodoActions()
+  
+  const { isLoading: loading } = useLoading()
 
-const DashboardView: React.FC<DashboardViewProps> = ({
-  loading,
-  todos,
-  completedCount,
-  totalCount,
-  onAddTodo,
-  onToggleComplete,
-  onDeleteTodo,
-  onUpdateTodo
-}) => {
   return (
     <div className="dashboard-grid">
       {/* Add Todo Card */}
       <div className="card add-todo-card">
         <h2>添加</h2>
-        <TodoForm onSubmit={onAddTodo} />
+        <TodoForm onSubmit={handleAddTodo} />
       </div>
 
       {/* Todo List Card */}
@@ -46,9 +37,6 @@ const DashboardView: React.FC<DashboardViewProps> = ({
         ) : (
           <TodoList
             todos={todos}
-            onToggleComplete={onToggleComplete}
-            onDelete={onDeleteTodo}
-            onUpdate={onUpdateTodo}
           />
         )}
       </div>
@@ -56,4 +44,4 @@ const DashboardView: React.FC<DashboardViewProps> = ({
   )
 }
 
-export default DashboardView
+export default React.memo(DashboardView)

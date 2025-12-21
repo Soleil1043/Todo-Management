@@ -6,9 +6,6 @@ import { mockTodos } from '../test/mock-data'
 describe('TodoList', () => {
   const defaultProps = {
     todos: mockTodos,
-    onToggleComplete: vi.fn(),
-    onDelete: vi.fn(),
-    onUpdate: vi.fn(),
   }
 
   beforeEach(() => {

@@ -1,20 +1,22 @@
-import { useState, useRef, useCallback, useMemo } from 'react';
-import { TodoSchema, sortTodosByPriority } from '../types/todo';
+import React, { useState, useRef, useCallback, useMemo } from 'react';
+import { sortTodosByPriority } from '../types/todo';
 import PriorityList from './PriorityList';
 import UnassignedStack from './UnassignedStack';
 import QuadrantCanvas from './QuadrantCanvas';
 import { useDragLogic } from '../hooks/useDragLogic';
 import { useTodoEditLogic } from '../hooks/useTodoEditLogic';
+import { useTodoState, useTodoActions } from '../contexts/TodoContext';
 
 export interface QuadrantViewProps {
-  todos: TodoSchema[];
-  onUpdateTodo: (todo: TodoSchema) => void;
-  onDeleteTodo: (id: number) => void;
-  onToggleComplete: (id: number) => void;
   spotlightType: 'glow' | 'flow' | 'focus' | 'none';
 }
 
-const QuadrantView: React.FC<QuadrantViewProps> = ({ todos, onUpdateTodo, onDeleteTodo, onToggleComplete, spotlightType }) => {
+const QuadrantView: React.FC<QuadrantViewProps> = ({ spotlightType }) => {
+  const { todos } = useTodoState();
+  const { 
+    handleUpdateTodoWithScores: onUpdateTodo,
+  } = useTodoActions();
+
   const [selectedTodoId, setSelectedTodoId] = useState<number | null>(null);
   const [hoveredTodoId, setHoveredTodoId] = useState<number | null>(null);
   const [tooltipData, setTooltipData] = useState<{ id: number; x: number; y: number } | null>(null);
@@ -23,16 +25,6 @@ const QuadrantView: React.FC<QuadrantViewProps> = ({ todos, onUpdateTodo, onDele
 
   const {
     editingTodoId,
-    editTitle,
-    editDescription,
-    editStartTime,
-    editEndTime,
-    editError,
-    setEditTitle,
-    setEditDescription,
-    setEditStartTime,
-    setEditEndTime,
-    setEditError,
     handleEditStart: handlePriorityEditStart,
     handleEditCancel: handlePriorityEditCancel,
     handleEditSave: handlePriorityEditSave
@@ -110,20 +102,9 @@ const QuadrantView: React.FC<QuadrantViewProps> = ({ todos, onUpdateTodo, onDele
           onDragStart={handleUnassignedDragStart}
           onDragEnd={handleUnassignedDragEnd}
           editingTodoId={editingTodoId}
-          editTitle={editTitle}
-          editDescription={editDescription}
-          editStartTime={editStartTime}
-          editEndTime={editEndTime}
-          editError={editError}
-          onDeleteTodo={onDeleteTodo}
           handleEditStart={handlePriorityEditStart}
           handleEditCancel={handlePriorityEditCancel}
           handleEditSave={handlePriorityEditSave}
-          setEditTitle={setEditTitle}
-          setEditDescription={setEditDescription}
-          setEditStartTime={setEditStartTime}
-          setEditEndTime={setEditEndTime}
-          setEditError={setEditError}
         />
 
         <QuadrantCanvas
@@ -152,26 +133,17 @@ const QuadrantView: React.FC<QuadrantViewProps> = ({ todos, onUpdateTodo, onDele
         <PriorityList
             todos={prioritySortedTodos}
             editingTodoId={editingTodoId}
-            editTitle={editTitle}
-            editDescription={editDescription}
-            editStartTime={editStartTime}
-            editEndTime={editEndTime}
-            editError={editError}
-            onToggleComplete={onToggleComplete}
-            onDeleteTodo={onDeleteTodo}
             handlePriorityEditStart={handlePriorityEditStart}
             handlePriorityEditCancel={handlePriorityEditCancel}
             handlePriorityEditSave={handlePriorityEditSave}
-            setEditTitle={setEditTitle}
-            setEditDescription={setEditDescription}
-            setEditStartTime={setEditStartTime}
-            setEditEndTime={setEditEndTime}
-            setEditError={setEditError}
             spotlightType={spotlightType}
+            onHoverTodo={handleTodoPointHover}
+            onLeaveTodo={handleTodoPointLeave}
+            hoveredTodoId={hoveredTodoId}
           />
       </div>
     </div>
   );
 };
 
-export default QuadrantView;
+export default React.memo(QuadrantView);

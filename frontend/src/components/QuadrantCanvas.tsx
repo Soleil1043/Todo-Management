@@ -112,17 +112,13 @@ const QuadrantCanvas: React.FC<QuadrantCanvasProps> = ({
           </div>
 
           {(() => {
-            const rect = (draggingTodo && localDragPos && canvasRef.current) 
-              ? canvasRef.current.getBoundingClientRect() 
-              : null;
-
             return assignedTodos.map(todo => {
               const isDragging = draggingTodo?.id === todo.id;
 
               let x, y;
-              if (isDragging && localDragPos && rect) {
-                x = (localDragPos.x / rect.width) * 100;
-                y = (localDragPos.y / rect.height) * 100;
+              if (isDragging && localDragPos) {
+                x = localDragPos.x;
+                y = localDragPos.y;
               } else {
                 x = scoreToPosition(todo.urgency_score ?? 0);
                 y = 100 - scoreToPosition(todo.future_score ?? 0);
@@ -138,16 +134,14 @@ const QuadrantCanvas: React.FC<QuadrantCanvasProps> = ({
                   isDragging={isDragging}
                   isSelected={selectedTodoId === todo.id}
                   isHovered={hoveredTodoId === todo.id}
-                  style={{
-                    left: `${clampedX}%`,
-                    top: `${clampedY}%`,
-                    zIndex: isDragging ? 1000 : (selectedTodoId === todo.id ? 999 : 50)
-                  }}
+                  x={clampedX}
+                  y={clampedY}
+                  zIndex={isDragging ? 1000 : (selectedTodoId === todo.id ? 999 : 50)}
                   onMouseDown={handleMouseDown}
                   onTouchStart={handleTouchStart}
-                  onMouseEnter={() => handleTodoPointHover(todo.id!, clampedX, clampedY)}
+                  onMouseEnter={handleTodoPointHover}
                   onMouseLeave={handleTodoPointLeave}
-                  onClick={() => handleTodoPointClick(todo.id!)}
+                  onClick={handleTodoPointClick}
                 />
               );
             });
@@ -181,14 +175,14 @@ const QuadrantCanvas: React.FC<QuadrantCanvasProps> = ({
           )}
 
           {/* 实时坐标预览 */}
-          {previewScores && localDragPos && canvasRef.current && (
+          {previewScores && localDragPos && (
             <div
               className="drag-coordinate-preview"
               style={{
-                left: `${localDragPos.x}px`,
-                top: `${localDragPos.y}px`,
+                left: `${localDragPos.x}%`,
+                top: `${localDragPos.y}%`,
                 zIndex: 2000,
-                transform: `translate(${localDragPos.x > canvasRef.current.clientWidth * 0.7 ? '-105%' : '15px'}, ${localDragPos.y < 60 ? '15px' : '-115%'})`
+                transform: `translate(${localDragPos.x > 70 ? '-105%' : '15px'}, ${localDragPos.y < 20 ? '15px' : '-115%'})`
               }}
             >
               <div className="preview-scores">

@@ -29,6 +29,8 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
   const containerRef = useRef<HTMLDivElement>(null)
   const hourColumnRef = useRef<HTMLDivElement>(null)
   const minuteColumnRef = useRef<HTMLDivElement>(null)
+  const isScrollingRef = useRef(false)
+  const scrollTimeoutRef = useRef<NodeJS.Timeout | null>(null)
   const generatedId = useId()
   const selectId = id || `time-selector-${generatedId}`
 
@@ -78,34 +80,67 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
    }, [onChange])
  
    // Scroll to active items when opened
-   useEffect(() => {
-     if (isOpen) {
-       const scrollToActive = (columnRef: React.RefObject<HTMLDivElement>, val: string) => {
-         if (columnRef.current) {
-           const activeItem = columnRef.current.querySelector(`[data-value="${val}"]`) as HTMLElement
-           if (activeItem) {
-             // 添加scrollTo方法存在性检查，避免测试环境中的错误
-             if (typeof columnRef.current.scrollTo === 'function') {
-               columnRef.current.scrollTo({
-                 top: activeItem.offsetTop - columnRef.current.offsetTop - 80,
-                 behavior: 'smooth'
-               })
-             } else {
-               // 降级处理：直接设置scrollTop
-               columnRef.current.scrollTop = activeItem.offsetTop - columnRef.current.offsetTop - 80
-             }
-           }
-         }
-       }
-       const timer = setTimeout(() => {
-         scrollToActive(hourColumnRef, currentHour || '00')
-         scrollToActive(minuteColumnRef, currentMinute || '00')
-       }, 50)
-       return () => clearTimeout(timer)
-     }
-   }, [isOpen, currentHour, currentMinute])
- 
-   return (
+  useEffect(() => {
+    if (isOpen && !isScrollingRef.current) {
+      const scrollToActive = (columnRef: React.RefObject<HTMLDivElement>, val: string) => {
+        if (columnRef.current) {
+          const activeItem = columnRef.current.querySelector(`[data-value="${val}"]`) as HTMLElement
+          if (activeItem) {
+            // 添加scrollTo方法存在性检查，避免测试环境中的错误
+            if (typeof columnRef.current.scrollTo === 'function') {
+              columnRef.current.scrollTo({
+                top: activeItem.offsetTop - columnRef.current.offsetTop - 80,
+                behavior: 'smooth'
+              })
+            } else {
+              // 降级处理：直接设置scrollTop
+              columnRef.current.scrollTop = activeItem.offsetTop - columnRef.current.offsetTop - 80
+            }
+          }
+        }
+      }
+      const timer = setTimeout(() => {
+        scrollToActive(hourColumnRef, currentHour || '00')
+        scrollToActive(minuteColumnRef, currentMinute || '00')
+      }, 50)
+      return () => clearTimeout(timer)
+    }
+  }, [isOpen, currentHour, currentMinute])
+
+  // Handle scroll selection
+  const handleWheelScroll = useCallback((e: React.UIEvent<HTMLDivElement>, type: 'hour' | 'minute') => {
+    const container = e.currentTarget
+    const scrollTop = container.scrollTop
+    
+    isScrollingRef.current = true
+    
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current)
+    }
+
+    scrollTimeoutRef.current = setTimeout(() => {
+      const index = Math.round(scrollTop / 40)
+      
+      if (type === 'hour') {
+        const newHour = HOURS[Math.min(Math.max(0, index), HOURS.length - 1)]
+        if (newHour && newHour !== currentHour) {
+          handleSelect(newHour, currentMinute || '00')
+        }
+      } else {
+        const newMinute = MINUTES[Math.min(Math.max(0, index), MINUTES.length - 1)]
+        if (newMinute && newMinute !== currentMinute) {
+          handleSelect(currentHour || '00', newMinute)
+        }
+      }
+      
+      // Reset scrolling flag after a short delay to allow effect to skip
+      setTimeout(() => {
+        isScrollingRef.current = false
+      }, 200)
+    }, 100)
+  }, [currentHour, currentMinute, handleSelect])
+
+  return (
      <div className={`time-selector ${isOpen ? 'open' : ''}`} ref={containerRef}>
        <label className="form-label" htmlFor={selectId}>
          {label}
@@ -154,21 +189,21 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
            <div className="time-wheel-container">
              <div className="time-wheel-selection-highlight"></div>
              
-             <div className="time-wheel-column" ref={hourColumnRef}>
-               {HOURS.map(h => (
-                 <div
-                   key={h}
-                   data-value={h}
-                   className={`time-wheel-item ${currentHour === h ? 'active' : ''}`}
-                   onClick={() => handleSelect(h, currentMinute || '00')}
-                 >
-                   {h}
-                 </div>
-               ))}
-             </div>
- 
-             <div className="time-wheel-column" ref={minuteColumnRef}>
-               {MINUTES.map(m => (
+             <div className="time-wheel-column" ref={hourColumnRef} onScroll={(e) => handleWheelScroll(e, 'hour')}>
+              {HOURS.map(h => (
+                <div
+                  key={h}
+                  data-value={h}
+                  className={`time-wheel-item ${currentHour === h ? 'active' : ''}`}
+                  onClick={() => handleSelect(h, currentMinute || '00')}
+                >
+                  {h}
+                </div>
+              ))}
+            </div>
+
+            <div className="time-wheel-column" ref={minuteColumnRef} onScroll={(e) => handleWheelScroll(e, 'minute')}>
+              {MINUTES.map(m => (
                  <div
                    key={m}
                    data-value={m}
@@ -186,4 +221,4 @@ const TimeSelector: React.FC<TimeSelectorProps> = ({
    )
 }
 
-export default TimeSelector
+export default React.memo(TimeSelector)

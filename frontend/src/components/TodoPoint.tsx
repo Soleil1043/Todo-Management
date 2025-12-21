@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TodoSchema } from '../types/todo';
 import { getPointColor, getQuadrantBorderColor } from '../utils/quadrantUtils';
 
@@ -6,13 +6,15 @@ interface TodoPointProps {
   todo: TodoSchema;
   onMouseDown: (e: React.MouseEvent, todo: TodoSchema) => void;
   onTouchStart: (e: React.TouchEvent, todo: TodoSchema) => void;
-  onMouseEnter: () => void;
+  onMouseEnter: (id: number, x: number, y: number) => void;
   onMouseLeave: () => void;
-  onClick: () => void;
+  onClick: (id: number) => void;
   isDragging: boolean;
   isSelected: boolean;
   isHovered: boolean;
-  style: React.CSSProperties;
+  x: number;
+  y: number;
+  zIndex: number;
 }
 
 const TodoPoint: React.FC<TodoPointProps> = ({ 
@@ -25,21 +27,28 @@ const TodoPoint: React.FC<TodoPointProps> = ({
   isDragging,
   isSelected,
   isHovered,
-  style
+  x,
+  y,
+  zIndex
 }) => {
+  const style = useMemo(() => ({
+    left: `${x}%`,
+    top: `${y}%`,
+    zIndex,
+    backgroundColor: getPointColor(todo.future_score ?? 0, todo.urgency_score ?? 0),
+    borderColor: getQuadrantBorderColor(todo.future_score ?? 0, todo.urgency_score ?? 0),
+    color: getPointColor(todo.future_score ?? 0, todo.urgency_score ?? 0),
+  }), [x, y, zIndex, todo.future_score, todo.urgency_score]);
+
   return (
     <div
       className={`todo-point ${isDragging ? 'dragging' : ''} ${isSelected ? 'selected' : ''} ${isHovered ? 'hovered' : ''}`}
-      style={{
-        ...style,
-        backgroundColor: getPointColor(todo.future_score ?? 0, todo.urgency_score ?? 0),
-        borderColor: getQuadrantBorderColor(todo.future_score ?? 0, todo.urgency_score ?? 0),
-      }}
+      style={style}
       onMouseDown={(e) => onMouseDown(e, todo)}
       onTouchStart={(e) => onTouchStart(e, todo)}
-      onMouseEnter={onMouseEnter}
+      onMouseEnter={() => onMouseEnter(todo.id!, x, y)}
       onMouseLeave={onMouseLeave}
-      onClick={onClick}
+      onClick={() => onClick(todo.id!)}
     >
       <div className="todo-point-content">
         <span className="todo-title">{todo.title}</span>

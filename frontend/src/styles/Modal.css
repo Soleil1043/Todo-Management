@@ -72,6 +72,7 @@ body.has-wallpaper .modal-content {
   overflow-y: auto;
   flex: 1;
   color: var(--text-primary);
+  scrollbar-gutter: stable; /* 防止滚动条出现时布局抖动 */
 }
 
 .modal-footer {

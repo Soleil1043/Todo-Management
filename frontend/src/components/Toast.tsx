@@ -43,8 +43,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     setToasts((prev) => prev.filter((t) => t.id !== id))
   }, [])
 
+  const contextValue = useMemo(() => ({ showToast, hideToast }), [showToast, hideToast])
+
   return (
-    <ToastContext.Provider value={{ showToast, hideToast }}>
+    <ToastContext.Provider value={contextValue}>
       {children}
       <div className="toast-container">
         {useMemo(() => toasts.map((toast) => (

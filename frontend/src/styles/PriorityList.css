@@ -67,6 +67,19 @@ body.has-wallpaper .priority-list {
   background: var(--bg-hover);
 }
 
+.priority-item.hovered {
+  background: var(--bg-hover);
+  transform: scale(1.02);
+  box-shadow: var(--shadow-lg);
+  z-index: 10;
+  border-bottom-color: transparent;
+}
+
+.priority-item.hovered .priority-item-title {
+  color: var(--color-primary);
+  font-weight: bold;
+}
+
 .priority-item.editing {
   height: auto;
   align-items: flex-start;

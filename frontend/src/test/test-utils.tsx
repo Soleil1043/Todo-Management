@@ -1,6 +1,8 @@
 import { ReactElement, ReactNode } from 'react'
 import { render, RenderOptions } from '@testing-library/react'
 import { LoadingProvider } from '../contexts/LoadingContext'
+import { SettingsProvider } from '../contexts/SettingsContext'
+import { TodoProvider } from '../contexts/TodoContext'
 import { ToastProvider } from '../components/Toast'
 
 interface AllTheProvidersProps {
@@ -11,7 +13,11 @@ export const AllTheProviders = ({ children }: AllTheProvidersProps) => {
   return (
     <LoadingProvider>
       <ToastProvider>
-        {children}
+        <SettingsProvider>
+          <TodoProvider>
+            {children}
+          </TodoProvider>
+        </SettingsProvider>
       </ToastProvider>
     </LoadingProvider>
   )

@@ -8,41 +8,32 @@ import { onCLS, onINP, onLCP, onFCP, onTTFB, Metric } from 'web-vitals'
  */
 export function usePerformanceMonitoring(componentName: string) {
   const renderCount = useRef(0)
-  const startTime = useRef<number>(0)
-  const previousTime = useRef<number>(0)
+  const renderStartTime = useRef<number>(performance.now())
+
+  // 在组件主体中记录开始时间（每次渲染都会执行）
+  renderStartTime.current = performance.now()
 
   useEffect(() => {
-    // 开始计时
-    startTime.current = performance.now()
     renderCount.current += 1
+    const renderEndTime = performance.now()
+    const renderTime = renderEndTime - renderStartTime.current
     
-    // 计算渲染时间
-    if (previousTime.current > 0) {
-      const renderTime = startTime.current - previousTime.current
+    // 如果渲染时间超过阈值（例如 16ms），记录警告
+    if (renderTime > 16) {
+      const message = `[Performance] ${componentName} 渲染耗时: ${renderTime.toFixed(2)}ms (第 ${renderCount.current} 次渲染)`;
+      console.warn(message)
       
-      // 如果渲染时间超过阈值，记录警告并上报
-      if (renderTime > 16) { // 超过1帧的时间
-        const message = `[Performance] ${componentName} 渲染时间过长: ${renderTime.toFixed(2)}ms (渲染次数: ${renderCount.current})`;
-        console.warn(message)
-        
-        // 上报到 Sentry
-        Sentry.addBreadcrumb({
-          category: 'performance',
-          message: message,
-          level: 'warning',
-        });
-      }
-      
-      // 开发模式下记录所有渲染
-      if (process.env.NODE_ENV === 'development') {
-        console.log(
-          `[Performance] ${componentName} 渲染时间: ${renderTime.toFixed(2)}ms ` +
-          `(渲染次数: ${renderCount.current})`
-        )
-      }
+      Sentry.addBreadcrumb({
+        category: 'performance',
+        message: message,
+        level: 'warning',
+      });
+    } else if (process.env.NODE_ENV === 'development') {
+      console.log(
+        `[Performance] ${componentName} 渲染耗时: ${renderTime.toFixed(2)}ms ` +
+        `(第 ${renderCount.current} 次渲染)`
+      )
     }
-    
-    previousTime.current = startTime.current
   })
 
   // 清理函数

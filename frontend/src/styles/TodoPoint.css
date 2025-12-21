@@ -17,6 +17,28 @@
   z-index: 100;
 }
 
+.todo-point.hovered {
+  transform: translate(-50%, -50%) scale(1.8);
+  z-index: 100;
+  box-shadow: 0 0 20px currentColor;
+  animation: point-pulse 1.5s infinite;
+}
+
+@keyframes point-pulse {
+  0% {
+    box-shadow: 0 0 0 0 currentColor;
+    opacity: 1;
+  }
+  70% {
+    box-shadow: 0 0 0 15px transparent;
+    opacity: 0.8;
+  }
+  100% {
+    box-shadow: 0 0 0 0 transparent;
+    opacity: 1;
+  }
+}
+
 .todo-point-content {
   display: none;
 }

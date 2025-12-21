@@ -1,43 +1,36 @@
 import React, { useRef, useState } from 'react'
-import Icon from './Icon'
-import { settingsApi } from '../services/api'
 import Modal from './Modal'
+import { useSettingsContext } from '../contexts/SettingsContext'
+import { settingsApi } from '../services/api'
 import { useToast } from './Toast'
-import LazyImage from './LazyImage'
+import Icon from './Icon'
+import '../styles/AppearanceSettings.css'
 
 interface AppearanceSettingsProps {
   isOpen: boolean
   onClose: () => void
-  theme: 'light' | 'dark'
-  onThemeChange: (theme: 'light' | 'dark') => void
-  bgImage: string | null
-  onBgImageChange: (isNewUpload?: boolean) => void
-  bgOpacity: number
-  onBgOpacityChange: (opacity: number) => void
-  bgBlur: number
-  onBgBlurChange: (blur: number) => void
-  spotlightType: 'glow' | 'flow' | 'focus' | 'none'
-  onSpotlightTypeChange: (type: 'glow' | 'flow' | 'focus' | 'none') => void
-  autoTrash: boolean
-  onAutoTrashChange: (enabled: boolean) => void
 }
 
 const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
   isOpen,
   onClose,
-  theme,
-  onThemeChange,
-  bgImage,
-  onBgImageChange,
-  bgOpacity,
-  onBgOpacityChange,
-  bgBlur,
-  onBgBlurChange,
-  spotlightType,
-  onSpotlightTypeChange,
-  autoTrash,
-  onAutoTrashChange,
 }) => {
+  const {
+    theme,
+    bgImage,
+    isBgLoading,
+    bgOpacity,
+    bgBlur,
+    spotlightType,
+    autoTrash,
+    handleThemeChange,
+    handleBgImageChange,
+    handleBgOpacityChange,
+    handleBgBlurChange,
+    handleSpotlightTypeChange,
+    handleAutoTrashChange
+  } = useSettingsContext()
+
   const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [isUploading, setIsUploading] = useState(false)
   const { showToast } = useToast()
@@ -54,13 +47,12 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
     try {
       setIsUploading(true)
       await settingsApi.uploadWallpaper(file)
-      onBgImageChange()
+      handleBgImageChange(true)
       showToast('壁纸上传成功', 'success')
     } catch (error) {
       showToast('上传壁纸失败，请重试', 'error')
     } finally {
       setIsUploading(false)
-      // 清空 input，允许重复选择同一文件
       if (fileInputRef.current) {
         fileInputRef.current.value = ''
       }
@@ -70,7 +62,7 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
   const handleDeleteWallpaper = async () => {
     try {
       await settingsApi.deleteWallpaper()
-      onBgImageChange()
+      handleBgImageChange(false)
       showToast('壁纸已移除', 'success')
     } catch (error) {
       showToast('移除壁纸失败', 'error')
@@ -84,170 +76,159 @@ const AppearanceSettings: React.FC<AppearanceSettingsProps> = ({
       title="外观设置"
       maxWidth="500px"
     >
-      <div className="settings-group">
-        <div className="settings-title">
-          <Icon name="sun" size={18} />
-          主题模式
-        </div>
-        <div className="theme-toggle">
-          <button
-            className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
-            onClick={() => onThemeChange('light')}
-          >
+      <div className="settings-container">
+        {/* 主题选择 */}
+        <section className="settings-group">
+          <div className="settings-title">
             <Icon name="sun" size={16} />
-            浅色模式
-          </button>
-          <button
-            className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
-            onClick={() => onThemeChange('dark')}
-          >
-            <Icon name="moon" size={16} />
-            深色模式
-          </button>
-        </div>
-      </div>
-
-      <div className="settings-group">
-        <div className="settings-title">
-          <Icon name="image" size={18} />
-          自定义壁纸
-        </div>
-        <div className="wallpaper-settings">
-          {bgImage && (
-            <div className="wallpaper-preview">
-              <LazyImage 
-                src={bgImage} 
-                alt="Wallpaper Preview" 
-                className="preview-img"
-              />
-            </div>
-          )}
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileUpload}
-            accept="image/*"
-            style={{ display: 'none' }}
-          />
-          <div className="wallpaper-actions">
-            <button
-              className="btn-upload"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-            >
-              <Icon name="upload" size={16} />
-              {isUploading ? '上传中...' : '上传壁纸'}
-            </button>
-            {bgImage && (
-              <button
-                className="btn-delete"
-                onClick={handleDeleteWallpaper}
-                title="移除壁纸"
-              >
-                <Icon name="trash" size={16} />
-              </button>
-            )}
+            主题模式
           </div>
-          <p className="settings-hint">支持 jpg, png 格式，最大 50MB</p>
-        </div>
-      </div>
+          <div className="theme-toggle">
+            <button
+              className={`theme-btn ${theme === 'light' ? 'active' : ''}`}
+              onClick={() => handleThemeChange('light')}
+            >
+              浅色
+            </button>
+            <button
+              className={`theme-btn ${theme === 'dark' ? 'active' : ''}`}
+              onClick={() => handleThemeChange('dark')}
+            >
+              深色
+            </button>
+          </div>
+        </section>
 
-      <div className="settings-group">
-        <div className="settings-title">
-          <Icon name="droplet" size={18} />
-          界面透明度
-        </div>
-        <div className="range-control">
-          <input
-            type="range"
-            min="0.5"
-            max="1"
-            step="0.05"
-            value={bgOpacity}
-            onChange={(e) => onBgOpacityChange(parseFloat(e.target.value))}
-            className="range-input"
-          />
-          <span className="range-value">{Math.round(bgOpacity * 100)}%</span>
-        </div>
-      </div>
+        {/* 背景图片 */}
+        <section className="settings-group">
+          <div className="settings-title">
+            <Icon name="image" size={16} />
+            背景壁纸
+          </div>
+          <div className="wallpaper-settings">
+            <div className={`wallpaper-preview ${isBgLoading || isUploading ? 'loading' : ''}`}>
+              {bgImage ? (
+                <img src={bgImage} alt="Wallpaper" className="preview-img" />
+              ) : (
+                <div className="no-wallpaper">
+                  <Icon name="image" size={24} />
+                  <span>无背景</span>
+                </div>
+              )}
+              {(isBgLoading || isUploading) && <div className="loader"></div>}
+            </div>
+            <div className="wallpaper-actions">
+              <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleFileUpload}
+                accept="image/*"
+                style={{ display: 'none' }}
+              />
+              <button 
+                className="btn-upload" 
+                onClick={() => fileInputRef.current?.click()}
+                disabled={isBgLoading || isUploading}
+              >
+                {isUploading ? '上传中...' : '更换壁纸'}
+              </button>
+              {bgImage && (
+                <button
+                  className="btn-delete"
+                  onClick={handleDeleteWallpaper}
+                  disabled={isBgLoading || isUploading}
+                >
+                  <Icon name="trash" size={16} />
+                </button>
+              )}
+            </div>
+            <p className="settings-hint">支持 jpg, png 格式，最大 50MB</p>
+          </div>
+        </section>
 
-      <div className="settings-group">
-        <div className="settings-title">
-          <Icon name="eye" size={18} />
-          背景模糊度
-        </div>
-        <div className="range-control">
-          <input
-            type="range"
-            min="0"
-            max="100"
-            step="10"
-            value={bgBlur}
-            onChange={(e) => onBgBlurChange(parseInt(e.target.value))}
-            className="range-input"
-          />
-          <span className="range-value">{bgBlur}%</span>
-        </div>
-      </div>
+        {/* 透明度与模糊度 */}
+        <section className="settings-group">
+          <div className="settings-title">
+            卡片透明度
+          </div>
+          <div className="range-control">
+            <input
+              type="range"
+              className="range-input"
+              min="0.1"
+              max="1"
+              step="0.05"
+              value={bgOpacity}
+              onChange={(e) => handleBgOpacityChange(parseFloat(e.target.value))}
+            />
+            <span className="range-value">{(bgOpacity * 100).toFixed(0)}%</span>
+          </div>
 
-      <div className="settings-group">
-        <div className="settings-title">
-          <Icon name="zap" size={18} />
-          聚光灯
-        </div>
-        <div className="spotlight-toggle">
-          <button
-            className={`theme-btn ${spotlightType === 'none' ? 'active' : ''}`}
-            onClick={() => onSpotlightTypeChange('none')}
-          >
-            无效果
-          </button>
-          <button
-            className={`theme-btn ${spotlightType === 'glow' ? 'active' : ''}`}
-            onClick={() => onSpotlightTypeChange('glow')}
-          >
-            呼吸灯
-          </button>
-          <button
-            className={`theme-btn ${spotlightType === 'flow' ? 'active' : ''}`}
-            onClick={() => onSpotlightTypeChange('flow')}
-          >
-            流光溢彩
-          </button>
-          <button
-            className={`theme-btn ${spotlightType === 'focus' ? 'active' : ''}`}
-            onClick={() => onSpotlightTypeChange('focus')}
-          >
-            聚焦
-          </button>
-        </div>
-      </div>
+          <div className="settings-title" style={{ marginTop: 'var(--space-4)' }}>
+            背景模糊度
+          </div>
+          <div className="range-control">
+            <input
+              type="range"
+              className="range-input"
+              min="0"
+              max="100"
+              step="5"
+              value={bgBlur}
+              onChange={(e) => handleBgBlurChange(parseInt(e.target.value))}
+            />
+            <span className="range-value">{bgBlur}%</span>
+          </div>
+        </section>
 
-      <div className="settings-group">
-        <div className="settings-title">
-          <Icon name="check-circle" size={18} />
-          完成行为
-        </div>
-        <div className="spotlight-toggle">
-          <button
-            className={`theme-btn ${!autoTrash ? 'active' : ''}`}
-            onClick={() => onAutoTrashChange(false)}
-          >
-            保留在列表
-          </button>
-          <button
-            className={`theme-btn ${autoTrash ? 'active' : ''}`}
-            onClick={() => onAutoTrashChange(true)}
-          >
-            移入回收站
-          </button>
-        </div>
-        <p className="settings-hint" style={{ marginTop: '8px' }}>
-          待办事项完成后是否自动移动到回收站
-        </p>
+        {/* 聚光灯效果 */}
+        <section className="settings-group">
+          <div className="settings-title">
+            <Icon name="zap" size={16} />
+            聚光灯效果 (四象限)
+          </div>
+          <div className="spotlight-toggle">
+            {(['glow', 'flow', 'focus', 'none'] as const).map(type => (
+              <button
+                key={type}
+                className={`theme-btn ${spotlightType === type ? 'active' : ''}`}
+                onClick={() => handleSpotlightTypeChange(type)}
+              >
+                {type === 'glow' && '柔光'}
+                {type === 'flow' && '流动'}
+                {type === 'focus' && '聚焦'}
+                {type === 'none' && '关闭'}
+              </button>
+            ))}
+          </div>
+        </section>
+
+        {/* 自动化 */}
+        <section className="settings-group">
+          <div className="settings-title">
+            <Icon name="settings" size={16} />
+            自动化
+          </div>
+          <div className="setting-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div className="setting-info">
+              <span className="title" style={{ fontSize: 'var(--text-sm)', color: 'var(--text-primary)' }}>自动移入回收站</span>
+              <p className="desc" style={{ fontSize: 'var(--text-xs)', color: 'var(--text-tertiary)', marginTop: '4px' }}>
+                当勾选完成时，自动将待办事项移动到回收站
+              </p>
+            </div>
+            <label className="switch">
+              <input
+                type="checkbox"
+                checked={autoTrash}
+                onChange={(e) => handleAutoTrashChange(e.target.checked)}
+              />
+              <span className="slider"></span>
+            </label>
+          </div>
+        </section>
       </div>
     </Modal>
   )
 }
 
-export default AppearanceSettings
+export default React.memo(AppearanceSettings)

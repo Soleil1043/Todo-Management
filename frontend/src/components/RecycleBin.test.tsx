@@ -1,9 +1,7 @@
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor } from '../test/test-utils'
 import userEvent from '@testing-library/user-event'
 import { vi } from 'vitest'
 import RecycleBin from './RecycleBin'
-import { ToastProvider } from './Toast'
-import { LoadingProvider } from '../contexts/LoadingContext'
 
 const mocks = vi.hoisted(() => ({
   getRecycleBin: vi.fn(),
@@ -21,6 +19,13 @@ vi.mock('../services/api', () => ({
     permanentlyDeleteTodo: mocks.permanentlyDeleteTodo,
     clearRecycleBin: mocks.clearRecycleBin,
   },
+  settingsApi: {
+    getSettings: vi.fn().mockResolvedValue({}),
+    updateSettings: vi.fn().mockResolvedValue({}),
+    getWallpaperUrl: vi.fn().mockReturnValue(''),
+    uploadWallpaper: vi.fn().mockResolvedValue({}),
+    deleteWallpaper: vi.fn().mockResolvedValue({}),
+  },
   recordToArray: (record: Record<number, unknown>) => Object.values(record),
 }))
 
@@ -35,8 +40,6 @@ describe('RecycleBin', () => {
   })
 
   it('restores all todos from recycle bin', async () => {
-    const onRestore = vi.fn()
-
     const todo1 = { id: 1, title: 't1', description: '', completed: false, urgency_score: 1, future_score: 1 }
     const todo2 = { id: 2, title: 't2', description: '', completed: false, urgency_score: 0, future_score: 0 }
     const restored = [todo1, todo2]
@@ -45,17 +48,10 @@ describe('RecycleBin', () => {
     mocks.batchRestoreTodos.mockResolvedValue({ message: 'ok', restored_todos: restored })
 
     render(
-      <LoadingProvider>
-        <ToastProvider>
-          <RecycleBin
-            isOpen={true}
-            onClose={() => {}}
-            onRestore={onRestore}
-            onPermanentlyDelete={() => {}}
-            onClearBin={() => {}}
-          />
-        </ToastProvider>
-      </LoadingProvider>
+      <RecycleBin
+        isOpen={true}
+        onClose={() => {}}
+      />
     )
 
     await screen.findByText('t1')
@@ -68,10 +64,6 @@ describe('RecycleBin', () => {
 
     await waitFor(() => {
       expect(mocks.batchRestoreTodos).toHaveBeenCalledWith([1, 2])
-    })
-
-    await waitFor(() => {
-      expect(onRestore).toHaveBeenCalledTimes(2)
     })
 
     await screen.findByText('垃圾桶为空')
